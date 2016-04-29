@@ -1,0 +1,27 @@
+{
+    "appKeys": {},
+    "capabilities": [
+        "location",
+        "configurable",
+        "health"
+    ],
+    "companyName": "VeryFamousDroid",
+    "enableMultiJS": true,
+    "longName": "FitFace",
+    "projectType": "native",
+    "resources": {
+        "media": []
+    },
+    "sdkVersion": "3",
+    "shortName": "FitFace",
+    "targetPlatforms": [
+        "aplite",
+        "basalt",
+        "chalk"
+    ],
+    "uuid": "0c9681b0-ce80-4220-b5b3-0c7743f29411",
+    "versionLabel": "1.0",
+    "watchapp": {
+        "watchface": true
+    }
+}
