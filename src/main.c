@@ -11,6 +11,8 @@ static Layer *s_circle_layer;
 static int s_step_count = 0;
 #endif
 
+#define KEY_TEMP 0
+
 static void update_time() {
   time_t temp = time(NULL);
   struct tm *tick_time = localtime(&temp);
@@ -80,6 +82,23 @@ static void canvas_update_circle_proc(Layer *layer, GContext *ctx) {
   #endif
 }
 
+static void inbox_received_callback(DictionaryIterator *iterator, void *context) {
+  static char weather_buffer[8];
+  
+  // Read tuples for data
+  Tuple *temp_tuple = dict_find(iterator, KEY_TEMP);
+  
+  // If all data is available, use it
+  if(temp_tuple) {
+    snprintf(weather_buffer, sizeof(weather_buffer), "%d°", (int)temp_tuple->value->int32);
+    text_layer_set_text(weather_layer, weather_buffer);
+  }
+}
+
+static void outbox_sent_callback(DictionaryIterator *iterator, void *context) {
+  APP_LOG(APP_LOG_LEVEL_INFO, "Outbox send success!");
+}
+
 void handle_init(void) {
   my_window = window_create(); 
     
@@ -124,7 +143,7 @@ void handle_init(void) {
   text_layer_set_text_color(weather_layer, PBL_IF_COLOR_ELSE(GColorMelon, GColorWhite));
   text_layer_set_font(weather_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
   text_layer_set_text_alignment(weather_layer, GTextAlignmentCenter);
-  text_layer_set_text(weather_layer, "65°");
+  text_layer_set_text(weather_layer, "∞");
   
   layer_add_child(window_layer, text_layer_get_layer(date_layer));
   layer_add_child(window_layer, text_layer_get_layer(time_layer));
@@ -140,6 +159,12 @@ void handle_init(void) {
   #if defined(PBL_HEALTH)
   update_steps();
   #endif
+  
+  app_message_register_inbox_received(inbox_received_callback);
+  app_message_register_outbox_sent(outbox_sent_callback);
+  const int inbox_size = 128;
+  const int outbox_size = 128;
+  app_message_open(inbox_size, outbox_size);
 }
 
 void handle_deinit(void) {

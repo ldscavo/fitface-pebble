@@ -1,6 +1,9 @@
 {
-    "appKeys": {},
+    "appKeys": {
+        "KEY_TEMP": 0
+    },
     "capabilities": [
+        "location",
         "health"
     ],
     "companyName": "VeryFamousDroid",
