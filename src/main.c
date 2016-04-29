@@ -135,6 +135,11 @@ void handle_init(void) {
   #if defined(PBL_HEALTH)
   health_service_events_subscribe(steps_handler, NULL);
   #endif
+  
+  update_time();
+  #if defined(PBL_HEALTH)
+  update_steps();
+  #endif
 }
 
 void handle_deinit(void) {
