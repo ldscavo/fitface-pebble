@@ -3,7 +3,13 @@
 Window *my_window;
 TextLayer *time_layer;
 TextLayer *date_layer;
+TextLayer *steps_layer;
+TextLayer *weather_layer;
 static Layer *s_circle_layer;
+
+#if defined(PBL_HEALTH)
+static int s_step_count = 0;
+#endif
 
 static void update_time() {
   time_t temp = time(NULL);
@@ -22,23 +28,55 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   update_time();
 }
 
-static void canvas_update_circle_proc(Layer *layer, GContext *ctx) {
-  GRect bounds = layer_get_bounds(layer);  
-      
-  uint16_t circle_width = 9;
+#if defined(PBL_HEALTH)
+static void update_steps() {
+  HealthMetric steps = HealthMetricStepCount;
+  time_t start = time_start_of_today();
+  time_t end = time(NULL);
+
+  HealthServiceAccessibilityMask mask = health_service_metric_accessible(steps, start, end);
+  static char steps_buffer[16];
+  if(mask & HealthServiceAccessibilityMaskAvailable) {
+    // Data is available!
+    s_step_count = (int)health_service_sum_today(steps);
+    snprintf(steps_buffer, sizeof(steps_buffer), "%u steps", s_step_count);
+  } else {
+    // No data recorded yet today
+    snprintf(steps_buffer, sizeof(steps_buffer), "No steps");
+  }
+  text_layer_set_text(steps_layer, steps_buffer);
   
-  graphics_context_set_stroke_color(ctx, COLOR_FALLBACK(GColorChromeYellow, GColorWhite));  
-  graphics_context_set_stroke_width(ctx, circle_width);
+  // Mark the circle layer as dirty so it will be redrawn
+  layer_mark_dirty(s_circle_layer);
+}
+
+static void steps_handler(HealthEventType event, void *context) {
+  update_steps();
+}
+#endif
+
+static void canvas_update_circle_proc(Layer *layer, GContext *ctx) {
+  const GRect inset = grect_inset(layer_get_bounds(layer), GEdgeInsets(2));
+  #if defined(PBL_HEALTH)
+  const GRect inset_frame = grect_inset(inset, GEdgeInsets(3));
+  
+  graphics_context_set_fill_color(ctx, GColorLightGray);
   graphics_context_set_antialiased(ctx, true);
   
-  uint16_t radius = (bounds.size.w / 2) - (circle_width * 1.25);
+  graphics_fill_radial(
+    ctx, inset_frame, GOvalScaleModeFitCircle, 1, DEG_TO_TRIGANGLE(0), DEG_TO_TRIGANGLE(360)
+  );
+  #endif
+  graphics_context_set_fill_color(ctx, PBL_IF_COLOR_ELSE(GColorChromeYellow, GColorWhite));
   
-  #if defined(PBL_ROUND)
-  GPoint center = grect_center_point(&bounds);
-  graphics_draw_circle(ctx, center, radius);
+  #if defined(PBL_HEALTH)
+  graphics_fill_radial(
+    ctx, inset, GOvalScaleModeFitCircle, PBL_IF_ROUND_ELSE(9, 7), DEG_TO_TRIGANGLE(0), DEG_TO_TRIGANGLE(360 * s_step_count / 4000)
+  );
   #else
-  GRect rect = grect_inset(bounds, GEdgeInsets1(7));
-  graphics_draw_round_rect(ctx, rect, radius / 5);
+  graphics_fill_radial(
+    ctx, inset, GOvalScaleModeFitCircle, 7, DEG_TO_TRIGANGLE(0), DEG_TO_TRIGANGLE(360)
+  );
   #endif
 }
 
@@ -47,7 +85,7 @@ void handle_init(void) {
     
   Layer *window_layer = window_get_root_layer(my_window);
   
-  window_set_background_color(my_window, COLOR_FALLBACK(GColorDukeBlue, GColorBlack));
+  window_set_background_color(my_window, COLOR_FALLBACK(GColorBlue, GColorBlack));
   
   GRect bounds = layer_get_bounds(window_layer);
   s_circle_layer = layer_create(bounds);
@@ -57,7 +95,7 @@ void handle_init(void) {
   
   window_stack_push(my_window, true);
   
-  date_layer = text_layer_create(GRect(PBL_IF_ROUND_ELSE(70, 50), 95, 75, 25));
+  date_layer = text_layer_create(GRect(PBL_IF_ROUND_ELSE(70, 50), PBL_IF_ROUND_ELSE(100, 95), 75, 25));
   //text_layer_create(GRect(x, y, w, h))
   text_layer_set_background_color(date_layer, GColorClear);
   text_layer_set_text_color(date_layer, PBL_IF_COLOR_ELSE(GColorMelon, GColorWhite));
@@ -73,14 +111,37 @@ void handle_init(void) {
   text_layer_set_font(time_layer, fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD));
   text_layer_set_text_alignment(time_layer, GTextAlignmentCenter);
   
+  steps_layer = text_layer_create(GRect(PBL_IF_ROUND_ELSE(40, 30), PBL_IF_ROUND_ELSE(40, 35), 100, 25));
+  
+  text_layer_set_background_color(steps_layer, GColorClear);
+  text_layer_set_text_color(steps_layer, PBL_IF_COLOR_ELSE(GColorMelon, GColorWhite));
+  text_layer_set_font(steps_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
+  text_layer_set_text_alignment(steps_layer, GTextAlignmentCenter);
+  
+  weather_layer = text_layer_create(GRect(PBL_IF_ROUND_ELSE(35, 15), PBL_IF_ROUND_ELSE(100, 95), 40, 25));
+
+  text_layer_set_background_color(weather_layer, GColorClear);
+  text_layer_set_text_color(weather_layer, PBL_IF_COLOR_ELSE(GColorMelon, GColorWhite));
+  text_layer_set_font(weather_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
+  text_layer_set_text_alignment(weather_layer, GTextAlignmentCenter);
+  text_layer_set_text(weather_layer, "65°");
+  
   layer_add_child(window_layer, text_layer_get_layer(date_layer));
   layer_add_child(window_layer, text_layer_get_layer(time_layer));
+  layer_add_child(window_layer, text_layer_get_layer(steps_layer));
+  layer_add_child(window_layer, text_layer_get_layer(weather_layer));
   
   tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
+  #if defined(PBL_HEALTH)
+  health_service_events_subscribe(steps_handler, NULL);
+  #endif
 }
 
 void handle_deinit(void) {
   text_layer_destroy(time_layer);
+  text_layer_destroy(date_layer);
+  text_layer_destroy(steps_layer);
+  text_layer_destroy(weather_layer);
   window_destroy(my_window);
 }
 

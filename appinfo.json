@@ -1,19 +1,17 @@
 {
     "appKeys": {},
     "capabilities": [
-        "location",
-        "configurable",
         "health"
     ],
     "companyName": "VeryFamousDroid",
     "enableMultiJS": true,
-    "longName": "FitFace",
+    "longName": "Fit Face",
     "projectType": "native",
     "resources": {
         "media": []
     },
     "sdkVersion": "3",
-    "shortName": "FitFace",
+    "shortName": "Fit Face",
     "targetPlatforms": [
         "aplite",
         "basalt",
