@@ -114,10 +114,10 @@ void handle_init(void) {
   
   window_stack_push(my_window, true);
   
-  date_layer = text_layer_create(GRect(PBL_IF_ROUND_ELSE(70, 50), PBL_IF_ROUND_ELSE(100, 95), 75, 25));
+  date_layer = text_layer_create(GRect(0, PBL_IF_ROUND_ELSE(100, 95), bounds.size.w, 25));
   //text_layer_create(GRect(x, y, w, h))
   text_layer_set_background_color(date_layer, GColorClear);
-  text_layer_set_text_color(date_layer, PBL_IF_COLOR_ELSE(GColorMelon, GColorWhite));
+  text_layer_set_text_color(date_layer, PBL_IF_COLOR_ELSE(GColorWhite, GColorWhite));
   text_layer_set_font(date_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
   text_layer_set_text_alignment(date_layer, GTextAlignmentCenter);
   
@@ -137,8 +137,8 @@ void handle_init(void) {
   text_layer_set_font(steps_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
   text_layer_set_text_alignment(steps_layer, GTextAlignmentCenter);
   
-  weather_layer = text_layer_create(GRect(PBL_IF_ROUND_ELSE(35, 15), PBL_IF_ROUND_ELSE(100, 95), 40, 25));
-
+  weather_layer = text_layer_create(GRect(0, PBL_IF_ROUND_ELSE(125, 115), bounds.size.w, 25));
+  
   text_layer_set_background_color(weather_layer, GColorClear);
   text_layer_set_text_color(weather_layer, PBL_IF_COLOR_ELSE(GColorMelon, GColorWhite));
   text_layer_set_font(weather_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
