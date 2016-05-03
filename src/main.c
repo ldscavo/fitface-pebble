@@ -77,7 +77,7 @@ static void steps_handler(HealthEventType event, void *context) {
 static void canvas_update_circle_proc(Layer *layer, GContext *ctx) {
   const GRect inset = grect_inset(layer_get_bounds(layer), GEdgeInsets(2));
   #if defined(PBL_HEALTH)
-  const GRect inset_frame = grect_inset(inset, GEdgeInsets(3));
+  const GRect inset_frame = grect_inset(inset, GEdgeInsets(2));
   
   APP_LOG(APP_LOG_LEVEL_INFO, "Step Goal is %d", s_stepgoal);
   
@@ -85,7 +85,7 @@ static void canvas_update_circle_proc(Layer *layer, GContext *ctx) {
   graphics_context_set_antialiased(ctx, true);
   
   graphics_fill_radial(
-    ctx, inset_frame, GOvalScaleModeFitCircle, 1, DEG_TO_TRIGANGLE(0), DEG_TO_TRIGANGLE(360)
+    ctx, inset_frame, GOvalScaleModeFitCircle, 2, DEG_TO_TRIGANGLE(0), DEG_TO_TRIGANGLE(360)
   );
   #endif
   graphics_context_set_fill_color(ctx, PBL_IF_COLOR_ELSE(GColorChromeYellow, GColorWhite));
