@@ -1,9 +1,12 @@
 {
     "appKeys": {
-        "KEY_TEMP": 0
+        "KEY_TEMP": 0,
+        "STEPGOAL": 101,
+        "TEMP_UNITS": 102
     },
     "capabilities": [
         "location",
+        "configurable",
         "health"
     ],
     "companyName": "VeryFamousDroid",

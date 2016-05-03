@@ -1,3 +1,7 @@
+var Clay = require('clay');
+var clayConfig = require('config');
+var clay = new Clay(clayConfig);
+
 // Listen for when an AppMessage is received
 Pebble.addEventListener('appmessage',
   function(e) {

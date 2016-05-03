@@ -7,11 +7,26 @@ TextLayer *steps_layer;
 TextLayer *weather_layer;
 static Layer *s_circle_layer;
 
-#if defined(PBL_HEALTH)
-static int s_step_count = 0;
-#endif
-
 #define KEY_TEMP 0
+#define STEPGOAL 101
+#define TEMP_UNITS 102
+
+static int s_step_count = 0;
+static int s_stepgoal = 5000;
+
+static char s_tempunits[] = "F";
+
+static void update_weather_and_settings() {
+  // Begin dictionary
+  DictionaryIterator *iter;
+  app_message_outbox_begin(&iter);
+
+  // Add a key-value pair
+  dict_write_uint8(iter, 0, 0);
+
+  // Send the message!
+  app_message_outbox_send();
+}
 
 static void update_time() {
   time_t temp = time(NULL);
@@ -24,13 +39,16 @@ static void update_time() {
   static char date_buffer[16];
   strftime(date_buffer, sizeof(date_buffer), "%a %b %d", tick_time);
   text_layer_set_text(date_layer, date_buffer);
+  
+  if(tick_time->tm_min % 30 == 0) {
+    update_weather_and_settings();
+  }
 }
 
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   update_time();
 }
 
-#if defined(PBL_HEALTH)
 static void update_steps() {
   HealthMetric steps = HealthMetricStepCount;
   time_t start = time_start_of_today();
@@ -41,10 +59,10 @@ static void update_steps() {
   if(mask & HealthServiceAccessibilityMaskAvailable) {
     // Data is available!
     s_step_count = (int)health_service_sum_today(steps);
-    snprintf(steps_buffer, sizeof(steps_buffer), "%u steps", s_step_count);
+    snprintf(steps_buffer, sizeof(steps_buffer), "%u Steps", s_step_count);
   } else {
-    // No data recorded yet today
-    snprintf(steps_buffer, sizeof(steps_buffer), "No steps");
+    // No data recorded
+    snprintf(steps_buffer, sizeof(steps_buffer), "No Steps");
   }
   text_layer_set_text(steps_layer, steps_buffer);
   
@@ -55,12 +73,13 @@ static void update_steps() {
 static void steps_handler(HealthEventType event, void *context) {
   update_steps();
 }
-#endif
 
 static void canvas_update_circle_proc(Layer *layer, GContext *ctx) {
   const GRect inset = grect_inset(layer_get_bounds(layer), GEdgeInsets(2));
   #if defined(PBL_HEALTH)
   const GRect inset_frame = grect_inset(inset, GEdgeInsets(3));
+  
+  APP_LOG(APP_LOG_LEVEL_INFO, "Step Goal is %d", s_stepgoal);
   
   graphics_context_set_fill_color(ctx, GColorLightGray);
   graphics_context_set_antialiased(ctx, true);
@@ -72,8 +91,10 @@ static void canvas_update_circle_proc(Layer *layer, GContext *ctx) {
   graphics_context_set_fill_color(ctx, PBL_IF_COLOR_ELSE(GColorChromeYellow, GColorWhite));
   
   #if defined(PBL_HEALTH)
+  int arc_angle = s_stepgoal > s_step_count ? 360 * s_step_count / s_stepgoal : 360;
+  
   graphics_fill_radial(
-    ctx, inset, GOvalScaleModeFitCircle, PBL_IF_ROUND_ELSE(9, 7), DEG_TO_TRIGANGLE(0), DEG_TO_TRIGANGLE(360 * s_step_count / 4000)
+    ctx, inset, GOvalScaleModeFitCircle, PBL_IF_ROUND_ELSE(9, 7), DEG_TO_TRIGANGLE(0), DEG_TO_TRIGANGLE(arc_angle)
   );
   #else
   graphics_fill_radial(
@@ -87,21 +108,39 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
   
   // Read tuples for data
   Tuple *temp_tuple = dict_find(iterator, KEY_TEMP);
+  Tuple *stepgoal_tuple = dict_find(iterator, STEPGOAL);
+  Tuple *tempunits_tuple = dict_find(iterator, TEMP_UNITS);
+    
+  if (tempunits_tuple) {
+    snprintf(s_tempunits, sizeof(s_tempunits), "%s", tempunits_tuple->value->cstring);
+    persist_write_string(TEMP_UNITS, s_tempunits);
+    APP_LOG(APP_LOG_LEVEL_INFO, "Temp unit is %s", tempunits_tuple->value->cstring);
+    
+    update_weather_and_settings();
+  }
   
-  // If all data is available, use it
   if(temp_tuple) {
-    snprintf(weather_buffer, sizeof(weather_buffer), "%d°", (int)temp_tuple->value->int32);
+    int temp = (int)temp_tuple->value->int32;
+    APP_LOG(APP_LOG_LEVEL_INFO, "Temp unit is %s", s_tempunits);
+    
+    if (strcmp(s_tempunits, "C") == 0) {
+      temp = (temp - 32) / 1.8;
+    }
+    snprintf(weather_buffer, sizeof(weather_buffer), "%d°%s", temp, s_tempunits);
     text_layer_set_text(weather_layer, weather_buffer);
   }
+  if (stepgoal_tuple) {
+    s_stepgoal = stepgoal_tuple->value->uint32;
+    persist_write_int(STEPGOAL, s_stepgoal);
+    update_steps();
+    APP_LOG(APP_LOG_LEVEL_INFO, "Step Goal Submitted!");
+  }  
 }
 
-static void outbox_sent_callback(DictionaryIterator *iterator, void *context) {
-  APP_LOG(APP_LOG_LEVEL_INFO, "Outbox send success!");
-}
 
 void handle_init(void) {
   my_window = window_create(); 
-    
+  
   Layer *window_layer = window_get_root_layer(my_window);
   
   window_set_background_color(my_window, COLOR_FALLBACK(GColorBlue, GColorBlack));
@@ -117,20 +156,18 @@ void handle_init(void) {
   date_layer = text_layer_create(GRect(0, PBL_IF_ROUND_ELSE(100, 95), bounds.size.w, 25));
   //text_layer_create(GRect(x, y, w, h))
   text_layer_set_background_color(date_layer, GColorClear);
-  text_layer_set_text_color(date_layer, PBL_IF_COLOR_ELSE(GColorWhite, GColorWhite));
+  text_layer_set_text_color(date_layer, GColorWhite);
   text_layer_set_font(date_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
   text_layer_set_text_alignment(date_layer, GTextAlignmentCenter);
   
-  time_layer = text_layer_create(
-    GRect(0, PBL_IF_ROUND_ELSE(58, 52), bounds.size.w, 50)
-  );
+  time_layer = text_layer_create(GRect(0, PBL_IF_ROUND_ELSE(58, 52), bounds.size.w, 50));
   
   text_layer_set_background_color(time_layer, GColorClear);
   text_layer_set_text_color(time_layer, GColorWhite);
   text_layer_set_font(time_layer, fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD));
   text_layer_set_text_alignment(time_layer, GTextAlignmentCenter);
   
-  steps_layer = text_layer_create(GRect(PBL_IF_ROUND_ELSE(40, 30), PBL_IF_ROUND_ELSE(40, 35), 100, 25));
+  steps_layer = text_layer_create(GRect(0, PBL_IF_ROUND_ELSE(40, 35), bounds.size.w, 25));
   
   text_layer_set_background_color(steps_layer, GColorClear);
   text_layer_set_text_color(steps_layer, PBL_IF_COLOR_ELSE(GColorMelon, GColorWhite));
@@ -151,17 +188,20 @@ void handle_init(void) {
   layer_add_child(window_layer, text_layer_get_layer(weather_layer));
   
   tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
-  #if defined(PBL_HEALTH)
   health_service_events_subscribe(steps_handler, NULL);
-  #endif
   
   update_time();
-  #if defined(PBL_HEALTH)
+  
+  if (persist_exists(STEPGOAL)) {
+    s_stepgoal = persist_read_int(STEPGOAL);
+  }
   update_steps();
-  #endif
+  
+  if (persist_exists(TEMP_UNITS)) {
+    persist_read_string(TEMP_UNITS, s_tempunits, sizeof(s_tempunits));
+  }
   
   app_message_register_inbox_received(inbox_received_callback);
-  app_message_register_outbox_sent(outbox_sent_callback);
   const int inbox_size = 128;
   const int outbox_size = 128;
   app_message_open(inbox_size, outbox_size);
