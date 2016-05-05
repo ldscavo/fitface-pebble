@@ -13,11 +13,25 @@ static Layer *s_circle_layer;
 #define TEMP_UNITS 102
 
 #define COLOR_BG 301
+#define COLOR_CIRCLE 302
+#define COLOR_TEXT_PRIMARY 303
+#define COLOR_TEXT_SECONDARY 304
 
 static int s_step_count = 0;
 static int s_stepgoal = 5000;
 
 static char s_tempunits[] = "F";
+
+GColor getColor(const uint32_t Key, GColor default_color, GColor default_bw) {
+  GColor color;
+  if (persist_exists(Key)) {
+    color = GColorFromHEX(persist_read_int(Key));
+  } else {
+    color = COLOR_FALLBACK(default_color, default_bw);
+  }
+  
+  return color;
+}
 
 static void update_weather_and_settings() {
   // Begin dictionary
@@ -91,7 +105,9 @@ static void canvas_update_circle_proc(Layer *layer, GContext *ctx) {
     ctx, inset_frame, GOvalScaleModeFitCircle, 2, DEG_TO_TRIGANGLE(0), DEG_TO_TRIGANGLE(360)
   );
   #endif
-  graphics_context_set_fill_color(ctx, PBL_IF_COLOR_ELSE(GColorChromeYellow, GColorWhite));
+  
+  GColor circle_color = getColor(COLOR_CIRCLE, GColorChromeYellow, GColorWhite);  
+  graphics_context_set_fill_color(ctx, circle_color);
   
   #if defined(PBL_HEALTH)
   int arc_angle = s_stepgoal > s_step_count ? 360 * s_step_count / s_stepgoal : 360;
@@ -114,7 +130,10 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
   Tuple *stepgoal_tuple = dict_find(iterator, STEPGOAL);
   Tuple *tempunits_tuple = dict_find(iterator, TEMP_UNITS);
   Tuple *color_bg_tuple = dict_find(iterator, COLOR_BG);
-    
+  Tuple *color_circle_tuple = dict_find(iterator, COLOR_CIRCLE);
+  Tuple *color_text_primary_tuple = dict_find(iterator, COLOR_TEXT_PRIMARY);
+  Tuple *color_text_secondary_tuple = dict_find(iterator, COLOR_TEXT_SECONDARY);
+  
   if (tempunits_tuple) {
     snprintf(s_tempunits, sizeof(s_tempunits), "%s", tempunits_tuple->value->cstring);
     persist_write_string(TEMP_UNITS, s_tempunits);
@@ -144,6 +163,22 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     window_set_background_color(my_window, GColorFromHEX(color_bg_tuple->value->uint32));
     APP_LOG(APP_LOG_LEVEL_INFO, "Background color set to %x", (int)color_bg_tuple->value->uint32);
   }
+  if (color_circle_tuple) {
+    persist_write_int(COLOR_CIRCLE, (int)color_circle_tuple->value->uint32);
+    layer_mark_dirty(s_circle_layer);
+  }
+  if (color_text_primary_tuple) {
+    persist_write_int(COLOR_TEXT_PRIMARY, (int)color_text_primary_tuple->value->uint32);
+    GColor color = GColorFromHEX((int)color_text_primary_tuple->value->uint32);
+    text_layer_set_text_color(time_layer, color);
+    text_layer_set_text_color(date_layer, color);
+  }
+  if (color_text_secondary_tuple) {
+    persist_write_int(COLOR_TEXT_SECONDARY, (int)color_text_secondary_tuple->value->uint32);
+    GColor color = GColorFromHEX((int)color_text_secondary_tuple->value->uint32);
+    text_layer_set_text_color(steps_layer, color);
+    text_layer_set_text_color(weather_layer, color);
+  }
 }
 
 void handle_init(void) {
@@ -151,12 +186,7 @@ void handle_init(void) {
   
   Layer *window_layer = window_get_root_layer(my_window);
   
-  GColor bg_color;
-  if (persist_exists(COLOR_BG)) {
-    bg_color = GColorFromHEX(persist_read_int(COLOR_BG));
-  } else {
-    bg_color = COLOR_FALLBACK(GColorBlue, GColorBlack);
-  }
+  GColor bg_color = getColor(COLOR_BG, GColorBlue, GColorBlack);
   
   window_set_background_color(my_window, bg_color);
   
@@ -168,24 +198,27 @@ void handle_init(void) {
   
   window_stack_push(my_window, true);
   
+  GColor time_color = getColor(COLOR_TEXT_PRIMARY, GColorWhite, GColorWhite);
+  GColor step_color = getColor(COLOR_TEXT_SECONDARY, GColorMelon, GColorWhite);
+  
   date_layer = text_layer_create(GRect(0, PBL_IF_ROUND_ELSE(100, 95), bounds.size.w, 25));
   
   text_layer_set_background_color(date_layer, GColorClear);
-  text_layer_set_text_color(date_layer, GColorWhite);
+  text_layer_set_text_color(date_layer, time_color);
   text_layer_set_font(date_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
   text_layer_set_text_alignment(date_layer, GTextAlignmentCenter);
   
   time_layer = text_layer_create(GRect(0, PBL_IF_ROUND_ELSE(58, 52), bounds.size.w, 50));
   
   text_layer_set_background_color(time_layer, GColorClear);
-  text_layer_set_text_color(time_layer, GColorWhite);
+  text_layer_set_text_color(time_layer, time_color);
   text_layer_set_font(time_layer, fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD));
   text_layer_set_text_alignment(time_layer, GTextAlignmentCenter);
   
   steps_layer = text_layer_create(GRect(0, PBL_IF_ROUND_ELSE(40, 35), bounds.size.w, 25));
   
   text_layer_set_background_color(steps_layer, GColorClear);
-  text_layer_set_text_color(steps_layer, PBL_IF_COLOR_ELSE(GColorMelon, GColorWhite));
+  text_layer_set_text_color(steps_layer, step_color);
   text_layer_set_font(steps_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
   text_layer_set_text_alignment(steps_layer, GTextAlignmentCenter);
   
@@ -194,7 +227,7 @@ void handle_init(void) {
   );
   
   text_layer_set_background_color(weather_layer, GColorClear);
-  text_layer_set_text_color(weather_layer, PBL_IF_COLOR_ELSE(GColorMelon, GColorWhite));
+  text_layer_set_text_color(weather_layer, step_color);
   text_layer_set_font(weather_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
   text_layer_set_text_alignment(weather_layer, GTextAlignmentCenter);
   
