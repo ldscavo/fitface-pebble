@@ -5,11 +5,7 @@ module.exports = [
   },
   {
     "type": "section",
-    items: [
-      /*{ 
-        "type": "heading", 
-        "defaultValue": "Fit Face" 
-      }, */
+    items: [      
       {
         "type": "slider",
         "appKey": "STEPGOAL",
@@ -22,8 +18,16 @@ module.exports = [
           "required": "required",
           "type": "number"
         }        
-      },
+      }      
+    ]},
       {
+      "type": "section",
+      "items": [
+        {
+          "type": "heading",
+          "defaultValue": "Weather Settings"
+        },
+        {
         "type": "select",
         "appKey": "TEMP_UNITS",
         "label": "Temperture Units",
@@ -38,8 +42,9 @@ module.exports = [
             "value": "C"
           }
         ]
+      }
+      ]
       },
-    ]},
       {
         "type": "section",
         "items": [
