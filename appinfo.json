@@ -1,8 +1,14 @@
 {
     "appKeys": {
+        "COLOR_BG": 301,
+        "COLOR_CIRCLE": 302,
+        "COLOR_TEXT_PRIMARY": 303,
+        "COLOR_TEXT_SECONDARY": 304,
         "KEY_TEMP": 0,
+        "LOCATION": 202,
         "STEPGOAL": 101,
-        "TEMP_UNITS": 102
+        "TEMP_UNITS": 102,
+        "USE_GPS": 201
     },
     "capabilities": [
         "location",
@@ -24,7 +30,7 @@
         "chalk"
     ],
     "uuid": "0c9681b0-ce80-4220-b5b3-0c7743f29411",
-    "versionLabel": "1.0",
+    "versionLabel": "1.01",
     "watchapp": {
         "watchface": true
     }

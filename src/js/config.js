@@ -1,11 +1,15 @@
 module.exports = [
   {
+    "type": "heading",
+    "defaultValue": "Fit Face"
+  },
+  {
     "type": "section",
     items: [
-      { 
+      /*{ 
         "type": "heading", 
         "defaultValue": "Fit Face" 
-      }, 
+      }, */
       {
         "type": "slider",
         "appKey": "STEPGOAL",
@@ -22,7 +26,7 @@ module.exports = [
       {
         "type": "select",
         "appKey": "TEMP_UNITS",
-        "label": "Tempurture Units",
+        "label": "Temperture Units",
         "defaultValue": "F",
         "options": [
           {
@@ -35,10 +39,48 @@ module.exports = [
           }
         ]
       },
+    ]},
+      {
+        "type": "section",
+        "items": [
+          { 
+            "type": "heading", 
+            "defaultValue": "Color Settings" 
+          }, 
+          {
+            "type": "color",
+            "appKey": "COLOR_BG",
+            "defaultValue": "0000FF",
+            "label": "Background Color",
+            "sunlight": false
+          },
+          {
+            "type": "color",
+            "appKey": "COLOR_CIRCLE",
+            "defaultValue": "FFAA00",
+            "label": "Circle Color",
+            "sunlight": false
+          },
+          {
+            "type": "color",
+            "appKey": "COLOR_TEXT_PRIMARY",
+            "defaultValue": "FFFFFF",
+            "label": "Primary Text Color",
+            "sunlight": false
+          },
+          {
+            "type": "color",
+            "appKey": "COLOR_TEXT_SECONDARY",
+            "defaultValue": "FFAAAA",
+            "label": "Secondary Text Color",
+            "sunlight": false
+          }
+        ]
+      },      
       {
         "type": "submit",
         "defaultValue": "Save Settings"
       }
-    ]
-  }
+    
+  
 ];

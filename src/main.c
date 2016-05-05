@@ -5,11 +5,14 @@ TextLayer *time_layer;
 TextLayer *date_layer;
 TextLayer *steps_layer;
 TextLayer *weather_layer;
+
 static Layer *s_circle_layer;
 
 #define KEY_TEMP 0
 #define STEPGOAL 101
 #define TEMP_UNITS 102
+
+#define COLOR_BG 301
 
 static int s_step_count = 0;
 static int s_stepgoal = 5000;
@@ -34,8 +37,9 @@ static void update_time() {
   
   static char s_buffer[8];
   strftime(s_buffer, sizeof(s_buffer), clock_is_24h_style() ? "%H:%M" : "%I:%M", tick_time);
-  text_layer_set_text(time_layer, s_buffer);
   
+  text_layer_set_text(time_layer, s_buffer);
+
   static char date_buffer[16];
   strftime(date_buffer, sizeof(date_buffer), "%a %b %d", tick_time);
   text_layer_set_text(date_layer, date_buffer);
@@ -56,15 +60,13 @@ static void update_steps() {
 
   HealthServiceAccessibilityMask mask = health_service_metric_accessible(steps, start, end);
   static char steps_buffer[16];
+  
   if(mask & HealthServiceAccessibilityMaskAvailable) {
-    // Data is available!
-    s_step_count = (int)health_service_sum_today(steps);
+    s_step_count = 3521;//(int)health_service_sum_today(steps);
     snprintf(steps_buffer, sizeof(steps_buffer), "%u Steps", s_step_count);
-  } else {
-    // No data recorded
-    snprintf(steps_buffer, sizeof(steps_buffer), "No Steps");
-  }
-  text_layer_set_text(steps_layer, steps_buffer);
+    
+    text_layer_set_text(steps_layer, steps_buffer);
+  }  
   
   // Mark the circle layer as dirty so it will be redrawn
   layer_mark_dirty(s_circle_layer);
@@ -80,6 +82,7 @@ static void canvas_update_circle_proc(Layer *layer, GContext *ctx) {
   const GRect inset_frame = grect_inset(inset, GEdgeInsets(2));
   
   APP_LOG(APP_LOG_LEVEL_INFO, "Step Goal is %d", s_stepgoal);
+    
   
   graphics_context_set_fill_color(ctx, GColorLightGray);
   graphics_context_set_antialiased(ctx, true);
@@ -110,6 +113,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
   Tuple *temp_tuple = dict_find(iterator, KEY_TEMP);
   Tuple *stepgoal_tuple = dict_find(iterator, STEPGOAL);
   Tuple *tempunits_tuple = dict_find(iterator, TEMP_UNITS);
+  Tuple *color_bg_tuple = dict_find(iterator, COLOR_BG);
     
   if (tempunits_tuple) {
     snprintf(s_tempunits, sizeof(s_tempunits), "%s", tempunits_tuple->value->cstring);
@@ -134,16 +138,27 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     persist_write_int(STEPGOAL, s_stepgoal);
     update_steps();
     APP_LOG(APP_LOG_LEVEL_INFO, "Step Goal Submitted!");
-  }  
+  }
+  if (color_bg_tuple) {
+    persist_write_int(COLOR_BG, (int)color_bg_tuple->value->uint32);
+    window_set_background_color(my_window, GColorFromHEX(color_bg_tuple->value->uint32));
+    APP_LOG(APP_LOG_LEVEL_INFO, "Background color set to %x", (int)color_bg_tuple->value->uint32);
+  }
 }
-
 
 void handle_init(void) {
   my_window = window_create(); 
   
   Layer *window_layer = window_get_root_layer(my_window);
   
-  window_set_background_color(my_window, COLOR_FALLBACK(GColorBlue, GColorBlack));
+  GColor bg_color;
+  if (persist_exists(COLOR_BG)) {
+    bg_color = GColorFromHEX(persist_read_int(COLOR_BG));
+  } else {
+    bg_color = COLOR_FALLBACK(GColorBlue, GColorBlack);
+  }
+  
+  window_set_background_color(my_window, bg_color);
   
   GRect bounds = layer_get_bounds(window_layer);
   s_circle_layer = layer_create(bounds);
@@ -154,7 +169,7 @@ void handle_init(void) {
   window_stack_push(my_window, true);
   
   date_layer = text_layer_create(GRect(0, PBL_IF_ROUND_ELSE(100, 95), bounds.size.w, 25));
-  //text_layer_create(GRect(x, y, w, h))
+  
   text_layer_set_background_color(date_layer, GColorClear);
   text_layer_set_text_color(date_layer, GColorWhite);
   text_layer_set_font(date_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
@@ -174,13 +189,14 @@ void handle_init(void) {
   text_layer_set_font(steps_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
   text_layer_set_text_alignment(steps_layer, GTextAlignmentCenter);
   
-  weather_layer = text_layer_create(GRect(0, PBL_IF_ROUND_ELSE(125, 115), bounds.size.w, 25));
+  weather_layer = text_layer_create(
+    GRect(0, PBL_IF_ROUND_ELSE(125, 115), bounds.size.w, 25)
+  );
   
   text_layer_set_background_color(weather_layer, GColorClear);
   text_layer_set_text_color(weather_layer, PBL_IF_COLOR_ELSE(GColorMelon, GColorWhite));
   text_layer_set_font(weather_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
   text_layer_set_text_alignment(weather_layer, GTextAlignmentCenter);
-  text_layer_set_text(weather_layer, "∞");
   
   layer_add_child(window_layer, text_layer_get_layer(date_layer));
   layer_add_child(window_layer, text_layer_get_layer(time_layer));
@@ -200,7 +216,7 @@ void handle_init(void) {
   if (persist_exists(TEMP_UNITS)) {
     persist_read_string(TEMP_UNITS, s_tempunits, sizeof(s_tempunits));
   }
-  
+    
   app_message_register_inbox_received(inbox_received_callback);
   const int inbox_size = 128;
   const int outbox_size = 128;
