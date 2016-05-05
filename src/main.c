@@ -13,9 +13,10 @@ static Layer *s_circle_layer;
 #define TEMP_UNITS 102
 
 #define COLOR_BG 301
-#define COLOR_CIRCLE 302
+#define COLOR_CIRCLE_PRIMARY 302
 #define COLOR_TEXT_PRIMARY 303
 #define COLOR_TEXT_SECONDARY 304
+#define COLOR_CIRCLE_SECONDARY 305
 
 static int s_step_count = 0;
 static int s_stepgoal = 5000;
@@ -76,7 +77,7 @@ static void update_steps() {
   static char steps_buffer[16];
   
   if(mask & HealthServiceAccessibilityMaskAvailable) {
-    s_step_count = 3521;//(int)health_service_sum_today(steps);
+    s_step_count = (int)health_service_sum_today(steps);
     snprintf(steps_buffer, sizeof(steps_buffer), "%u Steps", s_step_count);
     
     text_layer_set_text(steps_layer, steps_buffer);
@@ -97,8 +98,8 @@ static void canvas_update_circle_proc(Layer *layer, GContext *ctx) {
   
   APP_LOG(APP_LOG_LEVEL_INFO, "Step Goal is %d", s_stepgoal);
     
-  
-  graphics_context_set_fill_color(ctx, GColorLightGray);
+  GColor frame_color = getColor(COLOR_CIRCLE_SECONDARY, GColorLightGray, GColorWhite);
+  graphics_context_set_fill_color(ctx, frame_color);
   graphics_context_set_antialiased(ctx, true);
   
   graphics_fill_radial(
@@ -106,7 +107,7 @@ static void canvas_update_circle_proc(Layer *layer, GContext *ctx) {
   );
   #endif
   
-  GColor circle_color = getColor(COLOR_CIRCLE, GColorChromeYellow, GColorWhite);  
+  GColor circle_color = getColor(COLOR_CIRCLE_PRIMARY, GColorChromeYellow, GColorWhite);  
   graphics_context_set_fill_color(ctx, circle_color);
   
   #if defined(PBL_HEALTH)
@@ -130,9 +131,10 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
   Tuple *stepgoal_tuple = dict_find(iterator, STEPGOAL);
   Tuple *tempunits_tuple = dict_find(iterator, TEMP_UNITS);
   Tuple *color_bg_tuple = dict_find(iterator, COLOR_BG);
-  Tuple *color_circle_tuple = dict_find(iterator, COLOR_CIRCLE);
+  Tuple *color_circle_tuple = dict_find(iterator, COLOR_CIRCLE_PRIMARY);
   Tuple *color_text_primary_tuple = dict_find(iterator, COLOR_TEXT_PRIMARY);
   Tuple *color_text_secondary_tuple = dict_find(iterator, COLOR_TEXT_SECONDARY);
+  Tuple *color_circle_secondary_tuple = dict_find(iterator, COLOR_CIRCLE_SECONDARY);
   
   if (tempunits_tuple) {
     snprintf(s_tempunits, sizeof(s_tempunits), "%s", tempunits_tuple->value->cstring);
@@ -164,7 +166,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     APP_LOG(APP_LOG_LEVEL_INFO, "Background color set to %x", (int)color_bg_tuple->value->uint32);
   }
   if (color_circle_tuple) {
-    persist_write_int(COLOR_CIRCLE, (int)color_circle_tuple->value->uint32);
+    persist_write_int(COLOR_CIRCLE_PRIMARY, (int)color_circle_tuple->value->uint32);
     layer_mark_dirty(s_circle_layer);
   }
   if (color_text_primary_tuple) {
@@ -178,6 +180,10 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     GColor color = GColorFromHEX((int)color_text_secondary_tuple->value->uint32);
     text_layer_set_text_color(steps_layer, color);
     text_layer_set_text_color(weather_layer, color);
+  }
+  if (color_circle_secondary_tuple) {
+    persist_write_int(COLOR_CIRCLE_SECONDARY, (int)color_circle_secondary_tuple->value->uint32);
+    layer_mark_dirty(s_circle_layer);
   }
 }
 

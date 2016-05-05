@@ -56,9 +56,16 @@ module.exports = [
           },
           {
             "type": "color",
-            "appKey": "COLOR_CIRCLE",
+            "appKey": "COLOR_CIRCLE_PRIMARY",
             "defaultValue": "FFAA00",
-            "label": "Circle Color",
+            "label": "Primary Circle Color",
+            "sunlight": false
+          },
+          {
+            "type": "color",
+            "appKey": "COLOR_CIRCLE_SECONDARY",
+            "defaultValue": "AAAAAA",
+            "label": "Secondary Circle Color",
             "sunlight": false
           },
           {
