@@ -1,5 +1,7 @@
 {
     "appKeys": {
+        "BT_VIBE": 103,
+        "CITY": 203,
         "COLOR_BG": 301,
         "COLOR_CIRCLE_PRIMARY": 302,
         "COLOR_CIRCLE_SECONDARY": 305,
@@ -31,7 +33,7 @@
         "chalk"
     ],
     "uuid": "0c9681b0-ce80-4220-b5b3-0c7743f29411",
-    "versionLabel": "1.03",
+    "versionLabel": "1.07",
     "watchapp": {
         "watchface": true
     }

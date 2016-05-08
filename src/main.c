@@ -17,11 +17,14 @@ static Layer *s_circle_layer;
 #define COLOR_TEXT_PRIMARY 303
 #define COLOR_TEXT_SECONDARY 304
 #define COLOR_CIRCLE_SECONDARY 305
+#define BT_VIBE 103
 
 static int s_step_count = 0;
 static int s_stepgoal = 5000;
 
 static char s_tempunits[] = "F";
+
+static bool s_bt_vibe = false;
 
 GColor getColor(const uint32_t Key, GColor default_color, GColor default_bw) {
   GColor color;
@@ -77,7 +80,7 @@ static void update_steps() {
   static char steps_buffer[16];
   
   if(mask & HealthServiceAccessibilityMaskAvailable) {
-    s_step_count = (int)health_service_sum_today(steps);
+    s_step_count = 2500;//(int)health_service_sum_today(steps);
     snprintf(steps_buffer, sizeof(steps_buffer), "%u Steps", s_step_count);
     
     text_layer_set_text(steps_layer, steps_buffer);
@@ -135,6 +138,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
   Tuple *color_text_primary_tuple = dict_find(iterator, COLOR_TEXT_PRIMARY);
   Tuple *color_text_secondary_tuple = dict_find(iterator, COLOR_TEXT_SECONDARY);
   Tuple *color_circle_secondary_tuple = dict_find(iterator, COLOR_CIRCLE_SECONDARY);
+  Tuple *bt_vibe_tuple = dict_find(iterator, BT_VIBE);
   
   if (tempunits_tuple) {
     snprintf(s_tempunits, sizeof(s_tempunits), "%s", tempunits_tuple->value->cstring);
@@ -184,6 +188,22 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
   if (color_circle_secondary_tuple) {
     persist_write_int(COLOR_CIRCLE_SECONDARY, (int)color_circle_secondary_tuple->value->uint32);
     layer_mark_dirty(s_circle_layer);
+  }  
+  if (bt_vibe_tuple) {
+    //APP_LOG(APP_LOG_LEVEL_INFO, "Bluetooth connection: %d", (int)bt_vibe_tuple->value->uint32);
+    persist_write_bool(BT_VIBE, (bool)bt_vibe_tuple->value->uint32);
+  }
+}
+
+static void bluetooth_disconnect(bool connected) {
+  APP_LOG(APP_LOG_LEVEL_INFO, "Bluetooth connection: %d", (int)connected);
+  
+  if (persist_exists(BT_VIBE)) {
+    s_bt_vibe = persist_read_bool(BT_VIBE);
+  }
+  
+  if ((!connected) && s_bt_vibe) {
+    vibes_double_pulse();
   }
 }
 
@@ -245,7 +265,12 @@ void handle_init(void) {
   tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
   health_service_events_subscribe(steps_handler, NULL);
   
+  connection_service_subscribe((ConnectionHandlers) {
+    .pebble_app_connection_handler = bluetooth_disconnect
+  });
+  
   update_time();
+  bluetooth_disconnect(connection_service_peek_pebble_app_connection());
   
   if (persist_exists(STEPGOAL)) {
     s_stepgoal = persist_read_int(STEPGOAL);
@@ -267,6 +292,7 @@ void handle_deinit(void) {
   text_layer_destroy(date_layer);
   text_layer_destroy(steps_layer);
   text_layer_destroy(weather_layer);
+  layer_destroy(s_circle_layer);
   window_destroy(my_window);
 }
 
