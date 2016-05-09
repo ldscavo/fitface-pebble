@@ -80,7 +80,7 @@ static void update_steps() {
   static char steps_buffer[16];
   
   if(mask & HealthServiceAccessibilityMaskAvailable) {
-    s_step_count = 2500;//(int)health_service_sum_today(steps);
+    s_step_count = (int)health_service_sum_today(steps);
     snprintf(steps_buffer, sizeof(steps_buffer), "%u Steps", s_step_count);
     
     text_layer_set_text(steps_layer, steps_buffer);
