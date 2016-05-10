@@ -27,7 +27,7 @@ static int s_stepgoal = 5000;
 static char s_tempunits[] = "F";
 
 static bool s_bt_vibe = false;
-static bool s_circle_rounded = false;
+static bool s_circle_rounded = true;
 
 GColor getColor(const uint32_t Key, GColor default_color, GColor default_bw) {
   GColor color;
@@ -100,7 +100,7 @@ static void steps_handler(HealthEventType event, void *context) {
 static void canvas_update_circle_proc(Layer *layer, GContext *ctx) {
   const GRect inset = grect_inset(layer_get_bounds(layer), GEdgeInsets(2));
   #if defined(PBL_HEALTH)
-  const GRect inset_frame = grect_inset(inset, GEdgeInsets(2));
+  const GRect inset_frame = grect_inset(inset, GEdgeInsets(PBL_IF_BW_ELSE(10, 3)));
   
   APP_LOG(APP_LOG_LEVEL_INFO, "Step Goal is %d", s_stepgoal);
     
@@ -129,8 +129,8 @@ static void canvas_update_circle_proc(Layer *layer, GContext *ctx) {
     GPoint startpoint = gpoint_from_polar(inset_edges, GOvalScaleModeFitCircle, DEG_TO_TRIGANGLE(0));
     GPoint endpoint = gpoint_from_polar(inset_edges, GOvalScaleModeFitCircle, DEG_TO_TRIGANGLE(arc_angle));
     
-    graphics_fill_circle(ctx, startpoint, PBL_IF_ROUND_ELSE(6, 3));
-    graphics_fill_circle(ctx, endpoint, PBL_IF_ROUND_ELSE(6, 3));
+    graphics_fill_circle(ctx, startpoint, PBL_IF_ROUND_ELSE(6, 4));
+    graphics_fill_circle(ctx, endpoint, PBL_IF_ROUND_ELSE(6, 4));
   }
   #else
   graphics_fill_radial(
@@ -164,7 +164,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
   
   if(temp_tuple) {
     int temp = (int)temp_tuple->value->int32;
-    APP_LOG(APP_LOG_LEVEL_INFO, "Temp unit is %s", s_tempunits);
+    APP_LOG(APP_LOG_LEVEL_INFO, "Temperture is %d", temp);
     
     if (strcmp(s_tempunits, "C") == 0) {
       temp = (temp - 32) / 1.8;

@@ -29,7 +29,7 @@ module.exports = [
         "type": "toggle",
         "appKey": "CIRCLE_ROUNDED",
         "label": "Rounded ends on step circle",
-        "defaultValue": false
+        "defaultValue": true
       }
     ]
   },
