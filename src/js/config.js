@@ -24,7 +24,13 @@ module.exports = [
         "appKey": "BT_VIBE",
         "label": "Vibrate on bluetooth disconnect",
         "defaultValue": false
-      }    
+      },
+      {
+        "type": "toggle",
+        "appKey": "CIRCLE_ROUNDED",
+        "label": "Rounded ends on step circle",
+        "defaultValue": false
+      }
     ]
   },
   {

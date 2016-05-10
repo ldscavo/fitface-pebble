@@ -11,13 +11,15 @@ static Layer *s_circle_layer;
 #define KEY_TEMP 0
 #define STEPGOAL 101
 #define TEMP_UNITS 102
+#define BT_VIBE 103
+#define CIRCLE_ROUNDED 104
 
 #define COLOR_BG 301
 #define COLOR_CIRCLE_PRIMARY 302
 #define COLOR_TEXT_PRIMARY 303
 #define COLOR_TEXT_SECONDARY 304
 #define COLOR_CIRCLE_SECONDARY 305
-#define BT_VIBE 103
+
 
 static int s_step_count = 0;
 static int s_stepgoal = 5000;
@@ -25,6 +27,7 @@ static int s_stepgoal = 5000;
 static char s_tempunits[] = "F";
 
 static bool s_bt_vibe = false;
+static bool s_circle_rounded = false;
 
 GColor getColor(const uint32_t Key, GColor default_color, GColor default_bw) {
   GColor color;
@@ -117,8 +120,18 @@ static void canvas_update_circle_proc(Layer *layer, GContext *ctx) {
   int arc_angle = s_stepgoal > s_step_count ? 360 * s_step_count / s_stepgoal : 360;
   
   graphics_fill_radial(
-    ctx, inset, GOvalScaleModeFitCircle, PBL_IF_ROUND_ELSE(13, 7), DEG_TO_TRIGANGLE(0), DEG_TO_TRIGANGLE(arc_angle)
+    ctx, inset, GOvalScaleModeFitCircle, PBL_IF_ROUND_ELSE(15, 9), DEG_TO_TRIGANGLE(0), DEG_TO_TRIGANGLE(arc_angle)
   );
+  
+  if (s_circle_rounded && s_step_count > 0) {
+    GRect inset_edges = grect_inset(inset, GEdgeInsets(PBL_IF_ROUND_ELSE(7, 4)));
+    
+    GPoint startpoint = gpoint_from_polar(inset_edges, GOvalScaleModeFitCircle, DEG_TO_TRIGANGLE(0));
+    GPoint endpoint = gpoint_from_polar(inset_edges, GOvalScaleModeFitCircle, DEG_TO_TRIGANGLE(arc_angle));
+    
+    graphics_fill_circle(ctx, startpoint, PBL_IF_ROUND_ELSE(6, 3));
+    graphics_fill_circle(ctx, endpoint, PBL_IF_ROUND_ELSE(6, 3));
+  }
   #else
   graphics_fill_radial(
     ctx, inset, GOvalScaleModeFitCircle, 7, DEG_TO_TRIGANGLE(0), DEG_TO_TRIGANGLE(360)
@@ -139,6 +152,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
   Tuple *color_text_secondary_tuple = dict_find(iterator, COLOR_TEXT_SECONDARY);
   Tuple *color_circle_secondary_tuple = dict_find(iterator, COLOR_CIRCLE_SECONDARY);
   Tuple *bt_vibe_tuple = dict_find(iterator, BT_VIBE);
+  Tuple *circle_rounded_tuple = dict_find(iterator, CIRCLE_ROUNDED);
   
   if (tempunits_tuple) {
     snprintf(s_tempunits, sizeof(s_tempunits), "%s", tempunits_tuple->value->cstring);
@@ -193,6 +207,11 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     //APP_LOG(APP_LOG_LEVEL_INFO, "Bluetooth connection: %d", (int)bt_vibe_tuple->value->uint32);
     persist_write_bool(BT_VIBE, (bool)bt_vibe_tuple->value->uint32);
   }
+  if (circle_rounded_tuple) {
+    s_circle_rounded = (bool)circle_rounded_tuple->value->uint32;
+    persist_write_bool(CIRCLE_ROUNDED, s_circle_rounded);
+    layer_mark_dirty(s_circle_layer);
+  }
 }
 
 static void bluetooth_disconnect(bool connected) {
@@ -218,6 +237,10 @@ void handle_init(void) {
   
   GRect bounds = layer_get_bounds(window_layer);
   s_circle_layer = layer_create(bounds);
+  
+  if (persist_exists(CIRCLE_ROUNDED)) {
+    s_circle_rounded = persist_read_bool(CIRCLE_ROUNDED);
+  }
   
   layer_set_update_proc(s_circle_layer, canvas_update_circle_proc);
   layer_add_child(window_get_root_layer(my_window), s_circle_layer);
