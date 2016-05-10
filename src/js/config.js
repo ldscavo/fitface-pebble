@@ -71,35 +71,35 @@ module.exports = [
           "appKey": "COLOR_BG",
           "defaultValue": "0000FF",
           "label": "Background Color",
-          "sunlight": false
+          "sunlight": true
         },
         {
           "type": "color",
           "appKey": "COLOR_CIRCLE_PRIMARY",
           "defaultValue": "FFAA00",
           "label": "Primary Circle Color",
-          "sunlight": false
+          "sunlight": true
         },
         {
           "type": "color",
           "appKey": "COLOR_CIRCLE_SECONDARY",
           "defaultValue": "AAAAAA",
           "label": "Secondary Circle Color",
-          "sunlight": false
+          "sunlight": true
         },
         {
           "type": "color",
           "appKey": "COLOR_TEXT_PRIMARY",
           "defaultValue": "FFFFFF",
           "label": "Primary Text Color",
-          "sunlight": false
+          "sunlight": true
         },
         {
           "type": "color",
           "appKey": "COLOR_TEXT_SECONDARY",
           "defaultValue": "FFAAAA",
           "label": "Secondary Text Color",
-          "sunlight": false
+          "sunlight": true
         }
       ]
     },      

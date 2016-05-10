@@ -117,7 +117,7 @@ static void canvas_update_circle_proc(Layer *layer, GContext *ctx) {
   int arc_angle = s_stepgoal > s_step_count ? 360 * s_step_count / s_stepgoal : 360;
   
   graphics_fill_radial(
-    ctx, inset, GOvalScaleModeFitCircle, PBL_IF_ROUND_ELSE(9, 7), DEG_TO_TRIGANGLE(0), DEG_TO_TRIGANGLE(arc_angle)
+    ctx, inset, GOvalScaleModeFitCircle, PBL_IF_ROUND_ELSE(13, 7), DEG_TO_TRIGANGLE(0), DEG_TO_TRIGANGLE(arc_angle)
   );
   #else
   graphics_fill_radial(
