@@ -92,8 +92,6 @@ static void update_steps() {
       steps, time_start_of_today(), time(NULL), HealthServiceTimeScopeDaily
     );
     
-    APP_LOG(APP_LOG_LEVEL_INFO, "AVG Steps: %d", s_step_avg);
-    
     snprintf(steps_buffer, sizeof(steps_buffer), "%u Steps", s_step_count);
     
     text_layer_set_text(steps_layer, steps_buffer);
@@ -111,9 +109,7 @@ static void canvas_update_circle_proc(Layer *layer, GContext *ctx) {
   const GRect inset = grect_inset(layer_get_bounds(layer), GEdgeInsets(2));
   #if defined(PBL_HEALTH)
   const GRect inset_frame = grect_inset(inset, GEdgeInsets(PBL_IF_ROUND_ELSE(7, 3)));
-  
-  APP_LOG(APP_LOG_LEVEL_INFO, "Step Goal is %d", s_stepgoal);
-    
+      
   GColor frame_color = getColor(COLOR_CIRCLE_SECONDARY, GColorLightGray, GColorWhite);
   graphics_context_set_fill_color(ctx, frame_color);
   graphics_context_set_antialiased(ctx, true);
@@ -179,14 +175,12 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
   if (tempunits_tuple) {
     snprintf(s_tempunits, sizeof(s_tempunits), "%s", tempunits_tuple->value->cstring);
     persist_write_string(TEMP_UNITS, s_tempunits);
-    APP_LOG(APP_LOG_LEVEL_INFO, "Temp unit is %s", tempunits_tuple->value->cstring);
     
     update_weather_and_settings();
   }
   
   if(temp_tuple) {
     int temp = (int)temp_tuple->value->int32;
-    APP_LOG(APP_LOG_LEVEL_INFO, "Temperture is %d", temp);
     
     if (strcmp(s_tempunits, "C") == 0) {
       temp = (temp - 32) / 1.8;
@@ -198,12 +192,10 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     s_stepgoal = stepgoal_tuple->value->uint32;
     persist_write_int(STEPGOAL, s_stepgoal);
     update_steps();
-    APP_LOG(APP_LOG_LEVEL_INFO, "Step Goal Submitted!");
   }
   if (color_bg_tuple) {
     persist_write_int(COLOR_BG, (int)color_bg_tuple->value->uint32);
     window_set_background_color(my_window, GColorFromHEX(color_bg_tuple->value->uint32));
-    APP_LOG(APP_LOG_LEVEL_INFO, "Background color set to %x", (int)color_bg_tuple->value->uint32);
   }
   if (color_circle_tuple) {
     persist_write_int(COLOR_CIRCLE_PRIMARY, (int)color_circle_tuple->value->uint32);
@@ -230,7 +222,6 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     layer_mark_dirty(s_circle_layer);
   }
   if (bt_vibe_tuple) {
-    //APP_LOG(APP_LOG_LEVEL_INFO, "Bluetooth connection: %d", (int)bt_vibe_tuple->value->uint32);
     persist_write_bool(BT_VIBE, (bool)bt_vibe_tuple->value->uint32);
   }
   if (circle_rounded_tuple) {
@@ -245,9 +236,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
   }
 }
 
-static void bluetooth_disconnect(bool connected) {
-  APP_LOG(APP_LOG_LEVEL_INFO, "Bluetooth connection: %d", (int)connected);
-  
+static void bluetooth_disconnect(bool connected) {  
   if (persist_exists(BT_VIBE)) {
     s_bt_vibe = persist_read_bool(BT_VIBE);
   }

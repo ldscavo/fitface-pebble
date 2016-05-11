@@ -45,9 +45,7 @@ function sendWeatherRequest(queryStringParams) {
   // Construct URL
   var url = 'http://api.openweathermap.org/data/2.5/weather?units=imperial&appid=' + myAPIKey;  
   url += "&" + queryStringParams;
-  
-  console.log(url);
-  
+    
   // Send request to OpenWeatherMap
   xhrRequest(url, 'GET', 
     function(responseText) {
@@ -56,7 +54,6 @@ function sendWeatherRequest(queryStringParams) {
       console.log(responseText);
       // Temperature in Kelvin requires adjustment
       var temperature = json.main.temp;
-      console.log('Temperature is ' + temperature);
 
       // Assemble dictionary using our keys
       var dictionary = {
@@ -91,7 +88,6 @@ Pebble.addEventListener('ready',
     } else {
       location = location.LOCATION;
     }
-    console.log("Location: " + location);
         
     // Get the initial weather
     if (location === "") {
