@@ -30,6 +30,12 @@ module.exports = [
         "appKey": "CIRCLE_ROUNDED",
         "label": "Rounded ends on step circle",
         "defaultValue": true
+      },
+      {
+        "type": "toggle",
+        "appKey": "STEP_AVG",
+        "label": "Show line indicating average steps",
+        "defaultValue": false
       }
     ]
   },
@@ -105,6 +111,13 @@ module.exports = [
           "appKey": "COLOR_TEXT_SECONDARY",
           "defaultValue": "FFAAAA",
           "label": "Secondary Text Color",
+          "sunlight": true
+        },
+        {
+          "type": "color",
+          "appKey": "COLOR_AVG_LINE",
+          "defaultValue": "FFFFAA",
+          "label": "Step Average Line Color",
           "sunlight": true
         }
       ]

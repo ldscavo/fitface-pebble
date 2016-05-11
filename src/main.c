@@ -13,21 +13,24 @@ static Layer *s_circle_layer;
 #define TEMP_UNITS 102
 #define BT_VIBE 103
 #define CIRCLE_ROUNDED 104
+#define STEP_AVG 105
 
 #define COLOR_BG 301
 #define COLOR_CIRCLE_PRIMARY 302
 #define COLOR_TEXT_PRIMARY 303
 #define COLOR_TEXT_SECONDARY 304
 #define COLOR_CIRCLE_SECONDARY 305
-
+#define COLOR_AVG_LINE 306
 
 static int s_step_count = 0;
+static int s_step_avg = 0;
 static int s_stepgoal = 5000;
 
 static char s_tempunits[] = "F";
 
 static bool s_bt_vibe = false;
 static bool s_circle_rounded = true;
+static bool s_show_step_avg = false;
 
 GColor getColor(const uint32_t Key, GColor default_color, GColor default_bw) {
   GColor color;
@@ -83,7 +86,14 @@ static void update_steps() {
   static char steps_buffer[16];
   
   if(mask & HealthServiceAccessibilityMaskAvailable) {
-    s_step_count = 3200;//(int)health_service_sum_today(steps);
+    s_step_count = (int)health_service_sum_today(steps);
+    
+    s_step_avg = (int)health_service_sum_averaged(
+      steps, time_start_of_today(), time(NULL), HealthServiceTimeScopeDaily
+    );
+    
+    APP_LOG(APP_LOG_LEVEL_INFO, "AVG Steps: %d", s_step_avg);
+    
     snprintf(steps_buffer, sizeof(steps_buffer), "%u Steps", s_step_count);
     
     text_layer_set_text(steps_layer, steps_buffer);
@@ -132,6 +142,16 @@ static void canvas_update_circle_proc(Layer *layer, GContext *ctx) {
     graphics_fill_circle(ctx, startpoint, PBL_IF_ROUND_ELSE(6, 4));
     graphics_fill_circle(ctx, endpoint, PBL_IF_ROUND_ELSE(6, 4));
   }
+  
+  if (s_show_step_avg) {
+    GColor avg_color = getColor(COLOR_AVG_LINE, GColorPastelYellow, GColorWhite);
+    graphics_context_set_fill_color(ctx, avg_color);
+    
+    int avg_arc_angle = s_stepgoal > s_step_count ? 360 * s_step_avg / s_stepgoal : 360;
+    graphics_fill_radial(
+      ctx, layer_get_bounds(layer), GOvalScaleModeFitCircle, 25, DEG_TO_TRIGANGLE(avg_arc_angle), DEG_TO_TRIGANGLE(avg_arc_angle + 3)
+    );
+  }
   #else
   graphics_fill_radial(
     ctx, inset, GOvalScaleModeFitCircle, 7, DEG_TO_TRIGANGLE(0), DEG_TO_TRIGANGLE(360)
@@ -151,8 +171,10 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
   Tuple *color_text_primary_tuple = dict_find(iterator, COLOR_TEXT_PRIMARY);
   Tuple *color_text_secondary_tuple = dict_find(iterator, COLOR_TEXT_SECONDARY);
   Tuple *color_circle_secondary_tuple = dict_find(iterator, COLOR_CIRCLE_SECONDARY);
+  Tuple *color_avg_line_tuple = dict_find(iterator, COLOR_AVG_LINE);
   Tuple *bt_vibe_tuple = dict_find(iterator, BT_VIBE);
   Tuple *circle_rounded_tuple = dict_find(iterator, CIRCLE_ROUNDED);
+  Tuple *step_avg_tuple = dict_find(iterator, STEP_AVG);
   
   if (tempunits_tuple) {
     snprintf(s_tempunits, sizeof(s_tempunits), "%s", tempunits_tuple->value->cstring);
@@ -202,7 +224,11 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
   if (color_circle_secondary_tuple) {
     persist_write_int(COLOR_CIRCLE_SECONDARY, (int)color_circle_secondary_tuple->value->uint32);
     layer_mark_dirty(s_circle_layer);
-  }  
+  }
+  if (color_avg_line_tuple) {
+    persist_write_int(COLOR_AVG_LINE, (int)color_avg_line_tuple->value->uint32);
+    layer_mark_dirty(s_circle_layer);
+  }
   if (bt_vibe_tuple) {
     //APP_LOG(APP_LOG_LEVEL_INFO, "Bluetooth connection: %d", (int)bt_vibe_tuple->value->uint32);
     persist_write_bool(BT_VIBE, (bool)bt_vibe_tuple->value->uint32);
@@ -210,6 +236,11 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
   if (circle_rounded_tuple) {
     s_circle_rounded = (bool)circle_rounded_tuple->value->uint32;
     persist_write_bool(CIRCLE_ROUNDED, s_circle_rounded);
+    layer_mark_dirty(s_circle_layer);
+  }
+  if (step_avg_tuple) {
+    s_show_step_avg = (bool)step_avg_tuple->value->uint32;
+    persist_write_bool(STEP_AVG, s_show_step_avg);
     layer_mark_dirty(s_circle_layer);
   }
 }
@@ -240,6 +271,10 @@ void handle_init(void) {
   
   if (persist_exists(CIRCLE_ROUNDED)) {
     s_circle_rounded = persist_read_bool(CIRCLE_ROUNDED);
+  }
+  
+  if (persist_exists(STEP_AVG)) {
+    s_show_step_avg = persist_read_bool(STEP_AVG);
   }
   
   layer_set_update_proc(s_circle_layer, canvas_update_circle_proc);

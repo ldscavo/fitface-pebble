@@ -3,6 +3,7 @@
         "BT_VIBE": 103,
         "CIRCLE_ROUNDED": 104,
         "CITY": 203,
+        "COLOR_AVG_LINE": 306,
         "COLOR_BG": 301,
         "COLOR_CIRCLE_PRIMARY": 302,
         "COLOR_CIRCLE_SECONDARY": 305,
@@ -11,6 +12,7 @@
         "KEY_TEMP": 0,
         "LOCATION": 202,
         "STEPGOAL": 101,
+        "STEP_AVG": 105,
         "TEMP_UNITS": 102,
         "USE_GPS": 201
     },
@@ -34,7 +36,7 @@
         "chalk"
     ],
     "uuid": "0c9681b0-ce80-4220-b5b3-0c7743f29411",
-    "versionLabel": "1.13",
+    "versionLabel": "1.14",
     "watchapp": {
         "watchface": true
     }
