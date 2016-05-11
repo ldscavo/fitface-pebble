@@ -83,7 +83,7 @@ static void update_steps() {
   static char steps_buffer[16];
   
   if(mask & HealthServiceAccessibilityMaskAvailable) {
-    s_step_count = (int)health_service_sum_today(steps);
+    s_step_count = 3200;//(int)health_service_sum_today(steps);
     snprintf(steps_buffer, sizeof(steps_buffer), "%u Steps", s_step_count);
     
     text_layer_set_text(steps_layer, steps_buffer);
@@ -100,7 +100,7 @@ static void steps_handler(HealthEventType event, void *context) {
 static void canvas_update_circle_proc(Layer *layer, GContext *ctx) {
   const GRect inset = grect_inset(layer_get_bounds(layer), GEdgeInsets(2));
   #if defined(PBL_HEALTH)
-  const GRect inset_frame = grect_inset(inset, GEdgeInsets(PBL_IF_BW_ELSE(10, 3)));
+  const GRect inset_frame = grect_inset(inset, GEdgeInsets(PBL_IF_ROUND_ELSE(7, 3)));
   
   APP_LOG(APP_LOG_LEVEL_INFO, "Step Goal is %d", s_stepgoal);
     
