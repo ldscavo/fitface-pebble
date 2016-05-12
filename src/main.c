@@ -148,7 +148,7 @@ static void canvas_update_circle_proc(Layer *layer, GContext *ctx) {
     GColor avg_color = getColor(COLOR_AVG_LINE, GColorPastelYellow, GColorWhite);
     graphics_context_set_fill_color(ctx, avg_color);
     
-    int avg_arc_angle = s_stepgoal > s_step_count ? 360 * s_step_avg / s_stepgoal : 360;
+    int avg_arc_angle = s_stepgoal > s_step_avg ? 360 * s_step_avg / s_stepgoal : 360;
     graphics_fill_radial(
       ctx, layer_get_bounds(layer), GOvalScaleModeFitCircle, 25, DEG_TO_TRIGANGLE(avg_arc_angle), DEG_TO_TRIGANGLE(avg_arc_angle + 3)
     );
@@ -236,6 +236,9 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
   }
   if (step_avg_tuple) {
     s_show_step_avg = (bool)step_avg_tuple->value->uint32;
+    if (s_show_step_avg) {
+      update_avg_steps();
+    }
     persist_write_bool(STEP_AVG, s_show_step_avg);
     layer_mark_dirty(s_circle_layer);
   }
