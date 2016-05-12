@@ -55,6 +55,12 @@ static void update_weather_and_settings() {
   app_message_outbox_send();
 }
 
+static void update_avg_steps() {
+  s_step_avg = (int)health_service_sum_averaged(
+    HealthMetricStepCount, time_start_of_today(), time(NULL), HealthServiceTimeScopeDaily
+  );
+}
+
 static void update_time() {
   time_t temp = time(NULL);
   struct tm *tick_time = localtime(&temp);
@@ -70,6 +76,9 @@ static void update_time() {
   
   if(tick_time->tm_min % 30 == 0) {
     update_weather_and_settings();
+    if (s_show_step_avg) {
+      update_avg_steps();
+    }
   }
 }
 
@@ -87,11 +96,7 @@ static void update_steps() {
   
   if(mask & HealthServiceAccessibilityMaskAvailable) {
     s_step_count = (int)health_service_sum_today(steps);
-    
-    s_step_avg = (int)health_service_sum_averaged(
-      steps, time_start_of_today(), time(NULL), HealthServiceTimeScopeDaily
-    );
-    
+        
     snprintf(steps_buffer, sizeof(steps_buffer), "%u Steps", s_step_count);
     
     text_layer_set_text(steps_layer, steps_buffer);
@@ -264,6 +269,10 @@ void handle_init(void) {
   
   if (persist_exists(STEP_AVG)) {
     s_show_step_avg = persist_read_bool(STEP_AVG);
+  }
+  
+  if (s_show_step_avg) {
+    update_avg_steps();
   }
   
   layer_set_update_proc(s_circle_layer, canvas_update_circle_proc);
