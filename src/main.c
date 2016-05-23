@@ -14,6 +14,7 @@ static Layer *s_circle_layer;
 #define BT_VIBE 103
 #define CIRCLE_ROUNDED 104
 #define STEP_AVG 105
+#define STEP_AVG_SCOPE 106
 
 #define COLOR_BG 301
 #define COLOR_CIRCLE_PRIMARY 302
@@ -25,6 +26,8 @@ static Layer *s_circle_layer;
 static int s_step_count = 0;
 static int s_step_avg = 0;
 static int s_stepgoal = 5000;
+
+static char s_step_avg_scope[8];
 
 static char s_tempunits[] = "F";
 
@@ -56,8 +59,18 @@ static void update_weather_and_settings() {
 }
 
 static void update_avg_steps() {
+  HealthServiceTimeScope avg_scope;
+    
+  if (strcmp(s_step_avg_scope, "weekend") == 0) {
+    avg_scope = HealthServiceTimeScopeDailyWeekdayOrWeekend;
+  } else if (strcmp(s_step_avg_scope, "weekly") == 0) {
+    avg_scope = HealthServiceTimeScopeWeekly;
+  } else {
+    avg_scope = HealthServiceTimeScopeDaily;
+  }
+  
   s_step_avg = (int)health_service_sum_averaged(
-    HealthMetricStepCount, time_start_of_today(), time(NULL), HealthServiceTimeScopeDaily
+    HealthMetricStepCount, time_start_of_today(), time(NULL), avg_scope
   );
 }
 
@@ -176,6 +189,7 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
   Tuple *bt_vibe_tuple = dict_find(iterator, BT_VIBE);
   Tuple *circle_rounded_tuple = dict_find(iterator, CIRCLE_ROUNDED);
   Tuple *step_avg_tuple = dict_find(iterator, STEP_AVG);
+  Tuple *step_avg_scope_tuple = dict_find(iterator, STEP_AVG_SCOPE);
   
   if (tempunits_tuple) {
     snprintf(s_tempunits, sizeof(s_tempunits), "%s", tempunits_tuple->value->cstring);
@@ -242,6 +256,12 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     persist_write_bool(STEP_AVG, s_show_step_avg);
     layer_mark_dirty(s_circle_layer);
   }
+  if (step_avg_scope_tuple) {
+    snprintf(s_step_avg_scope, sizeof(s_step_avg_scope), "%s", step_avg_scope_tuple->value->cstring);
+    persist_write_string(STEP_AVG_SCOPE, s_step_avg_scope);
+    update_avg_steps();
+    layer_mark_dirty(s_circle_layer);
+  }
 }
 
 static void bluetooth_disconnect(bool connected) {  
@@ -268,6 +288,12 @@ void handle_init(void) {
   
   if (persist_exists(CIRCLE_ROUNDED)) {
     s_circle_rounded = persist_read_bool(CIRCLE_ROUNDED);
+  }
+  
+  if (persist_exists(STEP_AVG_SCOPE)) {
+    persist_read_string(STEP_AVG_SCOPE, s_step_avg_scope, sizeof(s_step_avg_scope));
+  } else {
+    snprintf(s_step_avg_scope, sizeof(s_step_avg_scope), "daily");
   }
   
   if (persist_exists(STEP_AVG)) {

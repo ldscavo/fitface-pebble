@@ -36,6 +36,26 @@ module.exports = [
         "appKey": "STEP_AVG",
         "label": "Show line indicating average steps",
         "defaultValue": false
+      },
+      {
+        "type": "select",
+        "appKey": "STEP_AVG_SCOPE",
+        "label": "Step average scope",
+        "defaultValue": "daily",
+        "options": [
+          {
+            "label": "Daily",
+            "value": "daily"
+          },
+          {
+            "label": "Weekend/Weekday",
+            "value": "weekend"
+          },
+          {
+            "label": "Day of the Week",
+            "value": "weekly"
+          }
+        ]
       }
     ]
   },
@@ -54,7 +74,7 @@ module.exports = [
         "defaultValue": ""
       },
       {
-        "type": "select",
+        "type": "radiogroup",
         "appKey": "TEMP_UNITS",
         "label": "Temperture Units",
         "defaultValue": "F",

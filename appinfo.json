@@ -13,6 +13,7 @@
         "LOCATION": 202,
         "STEPGOAL": 101,
         "STEP_AVG": 105,
+        "STEP_AVG_SCOPE": 106,
         "TEMP_UNITS": 102,
         "USE_GPS": 201
     },
@@ -36,7 +37,7 @@
         "chalk"
     ],
     "uuid": "0c9681b0-ce80-4220-b5b3-0c7743f29411",
-    "versionLabel": "1.15",
+    "versionLabel": "1.16",
     "watchapp": {
         "watchface": true
     }
