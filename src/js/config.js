@@ -5,7 +5,23 @@ module.exports = [
   },
   {
     "type": "section",
-    items: [      
+    items: [
+      {
+        "type": "toggle",
+        "appKey": "BT_VIBE",
+        "label": "Vibrate on bluetooth disconnect",
+        "defaultValue": false
+      }      
+    ]
+  },
+  {
+    "type": "section",
+    "items": [
+      {
+        "type": "heading",
+        "appKey": "health-header",
+        "defaultValue": "Health Settings"
+      },
       {
         "type": "slider",
         "appKey": "STEPGOAL",
@@ -18,12 +34,6 @@ module.exports = [
           "required": "required",
           "type": "number"
         }
-      },
-      {
-        "type": "toggle",
-        "appKey": "BT_VIBE",
-        "label": "Vibrate on bluetooth disconnect",
-        "defaultValue": false
       },
       {
         "type": "toggle",
