@@ -1,0 +1,50 @@
+{
+    "author": "VeryFamousDroid",
+    "dependencies": {
+        "pebble-clay": "^1.0.0"
+    },
+    "keywords": [],
+    "name": "fit-face",
+    "pebble": {
+        "capabilities": [
+            "location",
+            "configurable",
+            "health"
+        ],
+        "displayName": "Fit Face",
+        "enableMultiJS": true,
+        "messageKeys": [
+            "KEY_TEMP",
+            "STEPGOAL",
+            "TEMP_UNITS",
+            "BT_VIBE",
+            "CIRCLE_ROUNDED",
+            "STEP_AVG",
+            "STEP_AVG_SCOPE",
+            "USE_GPS",
+            "LOCATION",
+            "CITY",
+            "COLOR_BG",
+            "COLOR_CIRCLE_PRIMARY",
+            "COLOR_TEXT_PRIMARY",
+            "COLOR_TEXT_SECONDARY",
+            "COLOR_CIRCLE_SECONDARY",
+            "COLOR_AVG_LINE"
+        ],
+        "projectType": "native",
+        "resources": {
+            "media": []
+        },
+        "sdkVersion": "3",
+        "targetPlatforms": [
+            "aplite",
+            "basalt",
+            "chalk"
+        ],
+        "uuid": "0c9681b0-ce80-4220-b5b3-0c7743f29411",
+        "watchapp": {
+            "watchface": true
+        }
+    },
+    "version": "1.17.0"
+}

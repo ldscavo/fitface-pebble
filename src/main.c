@@ -8,21 +8,6 @@ TextLayer *weather_layer;
 
 static Layer *s_circle_layer;
 
-#define KEY_TEMP 0
-#define STEPGOAL 101
-#define TEMP_UNITS 102
-#define BT_VIBE 103
-#define CIRCLE_ROUNDED 104
-#define STEP_AVG 105
-#define STEP_AVG_SCOPE 106
-
-#define COLOR_BG 301
-#define COLOR_CIRCLE_PRIMARY 302
-#define COLOR_TEXT_PRIMARY 303
-#define COLOR_TEXT_SECONDARY 304
-#define COLOR_CIRCLE_SECONDARY 305
-#define COLOR_AVG_LINE 306
-
 static int s_step_count = 0;
 static int s_step_avg = 0;
 static int s_stepgoal = 5000;
@@ -128,7 +113,7 @@ static void canvas_update_circle_proc(Layer *layer, GContext *ctx) {
   #if defined(PBL_HEALTH)
   const GRect inset_frame = grect_inset(inset, GEdgeInsets(PBL_IF_ROUND_ELSE(7, 3)));
       
-  GColor frame_color = getColor(COLOR_CIRCLE_SECONDARY, GColorLightGray, GColorWhite);
+  GColor frame_color = getColor(MESSAGE_KEY_COLOR_CIRCLE_SECONDARY, GColorLightGray, GColorWhite);
   graphics_context_set_fill_color(ctx, frame_color);
   graphics_context_set_antialiased(ctx, true);
   
@@ -137,7 +122,7 @@ static void canvas_update_circle_proc(Layer *layer, GContext *ctx) {
   );
   #endif
   
-  GColor circle_color = getColor(COLOR_CIRCLE_PRIMARY, GColorChromeYellow, GColorWhite);  
+  GColor circle_color = getColor(MESSAGE_KEY_COLOR_CIRCLE_PRIMARY, GColorChromeYellow, GColorWhite);  
   graphics_context_set_fill_color(ctx, circle_color);
   
   #if defined(PBL_HEALTH)
@@ -158,7 +143,7 @@ static void canvas_update_circle_proc(Layer *layer, GContext *ctx) {
   }
   
   if (s_show_step_avg) {
-    GColor avg_color = getColor(COLOR_AVG_LINE, GColorPastelYellow, GColorWhite);
+    GColor avg_color = getColor(MESSAGE_KEY_COLOR_AVG_LINE, GColorPastelYellow, GColorWhite);
     graphics_context_set_fill_color(ctx, avg_color);
     
     int avg_arc_angle = s_stepgoal > s_step_avg ? 360 * s_step_avg / s_stepgoal : 360;
@@ -177,23 +162,23 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
   static char weather_buffer[8];
   
   // Read tuples for data
-  Tuple *temp_tuple = dict_find(iterator, KEY_TEMP);
-  Tuple *stepgoal_tuple = dict_find(iterator, STEPGOAL);
-  Tuple *tempunits_tuple = dict_find(iterator, TEMP_UNITS);
-  Tuple *color_bg_tuple = dict_find(iterator, COLOR_BG);
-  Tuple *color_circle_tuple = dict_find(iterator, COLOR_CIRCLE_PRIMARY);
-  Tuple *color_text_primary_tuple = dict_find(iterator, COLOR_TEXT_PRIMARY);
-  Tuple *color_text_secondary_tuple = dict_find(iterator, COLOR_TEXT_SECONDARY);
-  Tuple *color_circle_secondary_tuple = dict_find(iterator, COLOR_CIRCLE_SECONDARY);
-  Tuple *color_avg_line_tuple = dict_find(iterator, COLOR_AVG_LINE);
-  Tuple *bt_vibe_tuple = dict_find(iterator, BT_VIBE);
-  Tuple *circle_rounded_tuple = dict_find(iterator, CIRCLE_ROUNDED);
-  Tuple *step_avg_tuple = dict_find(iterator, STEP_AVG);
-  Tuple *step_avg_scope_tuple = dict_find(iterator, STEP_AVG_SCOPE);
+  Tuple *temp_tuple = dict_find(iterator, MESSAGE_KEY_KEY_TEMP);
+  Tuple *stepgoal_tuple = dict_find(iterator, MESSAGE_KEY_STEPGOAL);
+  Tuple *tempunits_tuple = dict_find(iterator, MESSAGE_KEY_TEMP_UNITS);
+  Tuple *color_bg_tuple = dict_find(iterator, MESSAGE_KEY_COLOR_BG);
+  Tuple *color_circle_tuple = dict_find(iterator, MESSAGE_KEY_COLOR_CIRCLE_PRIMARY);
+  Tuple *color_text_primary_tuple = dict_find(iterator, MESSAGE_KEY_COLOR_TEXT_PRIMARY);
+  Tuple *color_text_secondary_tuple = dict_find(iterator, MESSAGE_KEY_COLOR_TEXT_SECONDARY);
+  Tuple *color_circle_secondary_tuple = dict_find(iterator, MESSAGE_KEY_COLOR_CIRCLE_SECONDARY);
+  Tuple *color_avg_line_tuple = dict_find(iterator, MESSAGE_KEY_COLOR_AVG_LINE);
+  Tuple *bt_vibe_tuple = dict_find(iterator, MESSAGE_KEY_BT_VIBE);
+  Tuple *circle_rounded_tuple = dict_find(iterator, MESSAGE_KEY_CIRCLE_ROUNDED);
+  Tuple *step_avg_tuple = dict_find(iterator, MESSAGE_KEY_STEP_AVG);
+  Tuple *step_avg_scope_tuple = dict_find(iterator, MESSAGE_KEY_STEP_AVG_SCOPE);
   
   if (tempunits_tuple) {
     snprintf(s_tempunits, sizeof(s_tempunits), "%s", tempunits_tuple->value->cstring);
-    persist_write_string(TEMP_UNITS, s_tempunits);
+    persist_write_string(MESSAGE_KEY_TEMP_UNITS, s_tempunits);
     
     update_weather_and_settings();
   }
@@ -209,43 +194,43 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
   }
   if (stepgoal_tuple) {
     s_stepgoal = stepgoal_tuple->value->uint32;
-    persist_write_int(STEPGOAL, s_stepgoal);
+    persist_write_int(MESSAGE_KEY_STEPGOAL, s_stepgoal);
     update_steps();
   }
   if (color_bg_tuple) {
-    persist_write_int(COLOR_BG, (int)color_bg_tuple->value->uint32);
+    persist_write_int(MESSAGE_KEY_COLOR_BG, (int)color_bg_tuple->value->uint32);
     window_set_background_color(my_window, GColorFromHEX(color_bg_tuple->value->uint32));
   }
   if (color_circle_tuple) {
-    persist_write_int(COLOR_CIRCLE_PRIMARY, (int)color_circle_tuple->value->uint32);
+    persist_write_int(MESSAGE_KEY_COLOR_CIRCLE_PRIMARY, (int)color_circle_tuple->value->uint32);
     layer_mark_dirty(s_circle_layer);
   }
   if (color_text_primary_tuple) {
-    persist_write_int(COLOR_TEXT_PRIMARY, (int)color_text_primary_tuple->value->uint32);
+    persist_write_int(MESSAGE_KEY_COLOR_TEXT_PRIMARY, (int)color_text_primary_tuple->value->uint32);
     GColor color = GColorFromHEX((int)color_text_primary_tuple->value->uint32);
     text_layer_set_text_color(time_layer, color);
     text_layer_set_text_color(date_layer, color);
   }
   if (color_text_secondary_tuple) {
-    persist_write_int(COLOR_TEXT_SECONDARY, (int)color_text_secondary_tuple->value->uint32);
+    persist_write_int(MESSAGE_KEY_COLOR_TEXT_SECONDARY, (int)color_text_secondary_tuple->value->uint32);
     GColor color = GColorFromHEX((int)color_text_secondary_tuple->value->uint32);
     text_layer_set_text_color(steps_layer, color);
     text_layer_set_text_color(weather_layer, color);
   }
   if (color_circle_secondary_tuple) {
-    persist_write_int(COLOR_CIRCLE_SECONDARY, (int)color_circle_secondary_tuple->value->uint32);
+    persist_write_int(MESSAGE_KEY_COLOR_CIRCLE_SECONDARY, (int)color_circle_secondary_tuple->value->uint32);
     layer_mark_dirty(s_circle_layer);
   }
   if (color_avg_line_tuple) {
-    persist_write_int(COLOR_AVG_LINE, (int)color_avg_line_tuple->value->uint32);
+    persist_write_int(MESSAGE_KEY_COLOR_AVG_LINE, (int)color_avg_line_tuple->value->uint32);
     layer_mark_dirty(s_circle_layer);
   }
   if (bt_vibe_tuple) {
-    persist_write_bool(BT_VIBE, (bool)bt_vibe_tuple->value->uint32);
+    persist_write_bool(MESSAGE_KEY_BT_VIBE, (bool)bt_vibe_tuple->value->uint32);
   }
   if (circle_rounded_tuple) {
     s_circle_rounded = (bool)circle_rounded_tuple->value->uint32;
-    persist_write_bool(CIRCLE_ROUNDED, s_circle_rounded);
+    persist_write_bool(MESSAGE_KEY_CIRCLE_ROUNDED, s_circle_rounded);
     layer_mark_dirty(s_circle_layer);
   }
   if (step_avg_tuple) {
@@ -253,20 +238,20 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     if (s_show_step_avg) {
       update_avg_steps();
     }
-    persist_write_bool(STEP_AVG, s_show_step_avg);
+    persist_write_bool(MESSAGE_KEY_STEP_AVG, s_show_step_avg);
     layer_mark_dirty(s_circle_layer);
   }
   if (step_avg_scope_tuple) {
     snprintf(s_step_avg_scope, sizeof(s_step_avg_scope), "%s", step_avg_scope_tuple->value->cstring);
-    persist_write_string(STEP_AVG_SCOPE, s_step_avg_scope);
+    persist_write_string(MESSAGE_KEY_STEP_AVG_SCOPE, s_step_avg_scope);
     update_avg_steps();
     layer_mark_dirty(s_circle_layer);
   }
 }
 
 static void bluetooth_disconnect(bool connected) {  
-  if (persist_exists(BT_VIBE)) {
-    s_bt_vibe = persist_read_bool(BT_VIBE);
+  if (persist_exists(MESSAGE_KEY_BT_VIBE)) {
+    s_bt_vibe = persist_read_bool(MESSAGE_KEY_BT_VIBE);
   }
   
   if ((!connected) && s_bt_vibe) {
@@ -279,25 +264,25 @@ void handle_init(void) {
   
   Layer *window_layer = window_get_root_layer(my_window);
   
-  GColor bg_color = getColor(COLOR_BG, GColorBlue, GColorBlack);
+  GColor bg_color = getColor(MESSAGE_KEY_COLOR_BG, GColorBlue, GColorBlack);
   
   window_set_background_color(my_window, bg_color);
   
   GRect bounds = layer_get_bounds(window_layer);
   s_circle_layer = layer_create(bounds);
   
-  if (persist_exists(CIRCLE_ROUNDED)) {
-    s_circle_rounded = persist_read_bool(CIRCLE_ROUNDED);
+  if (persist_exists(MESSAGE_KEY_CIRCLE_ROUNDED)) {
+    s_circle_rounded = persist_read_bool(MESSAGE_KEY_CIRCLE_ROUNDED);
   }
   
-  if (persist_exists(STEP_AVG_SCOPE)) {
-    persist_read_string(STEP_AVG_SCOPE, s_step_avg_scope, sizeof(s_step_avg_scope));
+  if (persist_exists(MESSAGE_KEY_STEP_AVG_SCOPE)) {
+    persist_read_string(MESSAGE_KEY_STEP_AVG_SCOPE, s_step_avg_scope, sizeof(s_step_avg_scope));
   } else {
     snprintf(s_step_avg_scope, sizeof(s_step_avg_scope), "daily");
   }
   
-  if (persist_exists(STEP_AVG)) {
-    s_show_step_avg = persist_read_bool(STEP_AVG);
+  if (persist_exists(MESSAGE_KEY_STEP_AVG)) {
+    s_show_step_avg = persist_read_bool(MESSAGE_KEY_STEP_AVG);
   }
   
   if (s_show_step_avg) {
@@ -309,8 +294,8 @@ void handle_init(void) {
   
   window_stack_push(my_window, true);
   
-  GColor time_color = getColor(COLOR_TEXT_PRIMARY, GColorWhite, GColorWhite);
-  GColor step_color = getColor(COLOR_TEXT_SECONDARY, GColorMelon, GColorWhite);
+  GColor time_color = getColor(MESSAGE_KEY_COLOR_TEXT_PRIMARY, GColorWhite, GColorWhite);
+  GColor step_color = getColor(MESSAGE_KEY_COLOR_TEXT_SECONDARY, GColorMelon, GColorWhite);
   
   date_layer = text_layer_create(GRect(0, PBL_IF_ROUND_ELSE(100, 95), bounds.size.w, 25));
   
@@ -357,13 +342,13 @@ void handle_init(void) {
   update_time();
   bluetooth_disconnect(connection_service_peek_pebble_app_connection());
   
-  if (persist_exists(STEPGOAL)) {
-    s_stepgoal = persist_read_int(STEPGOAL);
+  if (persist_exists(MESSAGE_KEY_STEPGOAL)) {
+    s_stepgoal = persist_read_int(MESSAGE_KEY_STEPGOAL);
   }
   update_steps();
   
-  if (persist_exists(TEMP_UNITS)) {
-    persist_read_string(TEMP_UNITS, s_tempunits, sizeof(s_tempunits));
+  if (persist_exists(MESSAGE_KEY_TEMP_UNITS)) {
+    persist_read_string(MESSAGE_KEY_TEMP_UNITS, s_tempunits, sizeof(s_tempunits));
   }
     
   app_message_register_inbox_received(inbox_received_callback);

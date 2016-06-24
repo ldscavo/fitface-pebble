@@ -1,7 +1,6 @@
-var Clay = require('clay');
-var clayConfig = require('config');
-var clayFunctions = require('clay-functions');
-var clay = new Clay(clayConfig, clayFunctions);
+var Clay = require('pebble-clay');
+var clayConfig = require('./config.js');
+var clay = new Clay(clayConfig);
 
 var location;
 

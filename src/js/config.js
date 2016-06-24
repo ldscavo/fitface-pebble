@@ -5,10 +5,10 @@ module.exports = [
   },
   {
     "type": "section",
-    items: [
+    "items": [
       {
         "type": "toggle",
-        "appKey": "BT_VIBE",
+        "messageKey": "BT_VIBE",
         "label": "Vibrate on bluetooth disconnect",
         "defaultValue": false
       }      
@@ -16,15 +16,15 @@ module.exports = [
   },
   {
     "type": "section",
+    "capabilities": ["HEALTH"],
     "items": [
       {
         "type": "heading",
-        "appKey": "health-header",
         "defaultValue": "Health Settings"
       },
       {
         "type": "slider",
-        "appKey": "STEPGOAL",
+        "messageKey": "STEPGOAL",
         "label": "Daily Step Goal",
         "defaultValue": 5000,
         "min": 2000,
@@ -37,19 +37,19 @@ module.exports = [
       },
       {
         "type": "toggle",
-        "appKey": "CIRCLE_ROUNDED",
+        "messageKey": "CIRCLE_ROUNDED",
         "label": "Rounded ends on step circle",
         "defaultValue": true
       },
       {
         "type": "toggle",
-        "appKey": "STEP_AVG",
+        "messageKey": "STEP_AVG",
         "label": "Show line indicating average steps",
         "defaultValue": false
       },
       {
         "type": "select",
-        "appKey": "STEP_AVG_SCOPE",
+        "messageKey": "STEP_AVG_SCOPE",
         "label": "Step average scope",
         "defaultValue": "daily",
         "options": [
@@ -78,14 +78,14 @@ module.exports = [
       },        
       {
         "type": "input",
-        "appKey": "LOCATION",
+        "messageKey": "LOCATION",
         "label": "Location",
         "description": "Leave blank to use your phone's GPS services.",
         "defaultValue": ""
       },
       {
-        "type": "radiogroup",
-        "appKey": "TEMP_UNITS",
+        "type": "select",
+        "messageKey": "TEMP_UNITS",
         "label": "Temperture Units",
         "defaultValue": "F",
         "options": [
@@ -107,48 +107,54 @@ module.exports = [
         { 
           "type": "heading", 
           "defaultValue": "Color Settings" 
-        }, 
+        },        
         {
           "type": "color",
-          "appKey": "COLOR_BG",
+          "messageKey": "COLOR_BG",
           "defaultValue": "0000FF",
           "label": "Background Color",
-          "sunlight": true
+          "sunlight": true,
+          "allowGray": true
         },
         {
           "type": "color",
-          "appKey": "COLOR_CIRCLE_PRIMARY",
+          "messageKey": "COLOR_CIRCLE_PRIMARY",
           "defaultValue": "FFAA00",
           "label": "Primary Circle Color",
-          "sunlight": true
+          "sunlight": true,
+          "allowGray": true
         },
         {
           "type": "color",
-          "appKey": "COLOR_CIRCLE_SECONDARY",
+          "messageKey": "COLOR_CIRCLE_SECONDARY",
           "defaultValue": "AAAAAA",
           "label": "Secondary Circle Color",
-          "sunlight": true
+          "sunlight": true,
+          "capabilities": ["HEALTH"],
+          "allowGray": true
         },
         {
           "type": "color",
-          "appKey": "COLOR_TEXT_PRIMARY",
+          "messageKey": "COLOR_TEXT_PRIMARY",
           "defaultValue": "FFFFFF",
           "label": "Primary Text Color",
           "sunlight": true
         },
         {
           "type": "color",
-          "appKey": "COLOR_TEXT_SECONDARY",
+          "messageKey": "COLOR_TEXT_SECONDARY",
           "defaultValue": "FFAAAA",
           "label": "Secondary Text Color",
           "sunlight": true
         },
         {
           "type": "color",
-          "appKey": "COLOR_AVG_LINE",
+          "messageKey": "COLOR_AVG_LINE",
           "defaultValue": "FFFFAA",
           "label": "Step Average Line Color",
-          "sunlight": true
+          "sunlight": true,
+          "capabilities": ["HEALTH"],
+          "allowGray": true
         }
       ]
     },      
