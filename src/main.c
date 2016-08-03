@@ -122,7 +122,7 @@ static void canvas_update_circle_proc(Layer *layer, GContext *ctx) {
   );
   #endif
   
-  GColor circle_color = getColor(MESSAGE_KEY_COLOR_CIRCLE_PRIMARY, GColorChromeYellow, GColorWhite);  
+  GColor circle_color = getColor(MESSAGE_KEY_COLOR_CIRCLE_PRIMARY, GColorChromeYellow, GColorLightGray);  
   graphics_context_set_fill_color(ctx, circle_color);
   
   #if defined(PBL_HEALTH)
