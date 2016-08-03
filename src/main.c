@@ -148,7 +148,7 @@ static void canvas_update_circle_proc(Layer *layer, GContext *ctx) {
     
     int avg_arc_angle = s_stepgoal > s_step_avg ? 360 * s_step_avg / s_stepgoal : 360;
     graphics_fill_radial(
-      ctx, layer_get_bounds(layer), GOvalScaleModeFitCircle, 25, DEG_TO_TRIGANGLE(avg_arc_angle), DEG_TO_TRIGANGLE(avg_arc_angle + 3)
+      ctx, layer_get_bounds(layer), GOvalScaleModeFitCircle, PBL_IF_ROUND_ELSE(25, 17), DEG_TO_TRIGANGLE(avg_arc_angle), DEG_TO_TRIGANGLE(avg_arc_angle + 3)
     );
   }
   #else
