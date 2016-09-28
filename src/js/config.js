@@ -11,7 +11,13 @@ module.exports = [
         "messageKey": "BT_VIBE",
         "label": "Vibrate on bluetooth disconnect",
         "defaultValue": false
-      }      
+      },
+      {
+        "type": "toggle",
+        "messageKey": "BATTERY_LEVEL",
+        "label": "Show battery level",
+        "defaultValue": false
+      }
     ]
   },
   {
