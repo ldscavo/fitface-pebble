@@ -5,6 +5,7 @@ TextLayer *time_layer;
 TextLayer *date_layer;
 TextLayer *steps_layer;
 TextLayer *weather_layer;
+TextLayer *battery_layer;
 
 static Layer *s_circle_layer;
 
@@ -19,6 +20,7 @@ static char s_tempunits[] = "F";
 static bool s_bt_vibe = false;
 static bool s_circle_rounded = true;
 static bool s_show_step_avg = false;
+static bool s_show_battery_level = false;
 
 GColor getColor(const uint32_t Key, GColor default_color, GColor default_bw) {
   GColor color;
@@ -108,6 +110,18 @@ static void steps_handler(HealthEventType event, void *context) {
   update_steps();
 }
 
+static void handle_battery(BatteryChargeState charge_state) {
+  static char battery_text[9];
+  if (!s_show_battery_level) {
+    strcpy(battery_text, "");
+  } else if (charge_state.is_charging) {
+    snprintf(battery_text, sizeof(battery_text), "charging");
+  } else {
+    snprintf(battery_text, sizeof(battery_text), "%d%%", charge_state.charge_percent);
+  }
+  text_layer_set_text(battery_layer, battery_text);
+}
+
 static void canvas_update_circle_proc(Layer *layer, GContext *ctx) {
   const GRect inset = grect_inset(layer_get_bounds(layer), GEdgeInsets(2));
   #if defined(PBL_HEALTH)
@@ -156,6 +170,15 @@ static void canvas_update_circle_proc(Layer *layer, GContext *ctx) {
     ctx, inset, GOvalScaleModeFitCircle, 7, DEG_TO_TRIGANGLE(0), DEG_TO_TRIGANGLE(360)
   );
   #endif
+}
+
+static void process_config_for_battery_level(DictionaryIterator *iterator) {
+  Tuple *battery_level_tuple = dict_find(iterator, MESSAGE_KEY_BATTERY_LEVEL);
+  if (battery_level_tuple) {
+    s_show_battery_level = battery_level_tuple->value->int32 == 1;
+    persist_write_bool(MESSAGE_KEY_BATTERY_LEVEL, s_show_battery_level);
+    handle_battery(battery_state_service_peek());
+  }
 }
 
 static void inbox_received_callback(DictionaryIterator *iterator, void *context) {
@@ -247,6 +270,8 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     update_avg_steps();
     layer_mark_dirty(s_circle_layer);
   }
+
+  process_config_for_battery_level(iterator);
 }
 
 static void bluetooth_disconnect(bool connected) {  
@@ -257,6 +282,21 @@ static void bluetooth_disconnect(bool connected) {
   if ((!connected) && s_bt_vibe) {
     vibes_double_pulse();
   }
+}
+
+static void init_battery_level(Layer *window_layer, GColor color) {
+  battery_layer = text_layer_create(GRect(0, PBL_IF_ROUND_ELSE(25, 22), layer_get_bounds(window_layer).size.w, 18));
+  text_layer_set_background_color(battery_layer, GColorClear);
+  text_layer_set_text_color(battery_layer, color);
+  text_layer_set_font(battery_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD));
+  text_layer_set_text_alignment(battery_layer, GTextAlignmentCenter);
+  layer_add_child(window_layer, text_layer_get_layer(battery_layer));
+
+  battery_state_service_subscribe(handle_battery);
+  if (persist_exists(MESSAGE_KEY_BATTERY_LEVEL)) {
+    s_show_battery_level = persist_read_bool(MESSAGE_KEY_BATTERY_LEVEL);
+  }
+  handle_battery(battery_state_service_peek());
 }
 
 void handle_init(void) {
@@ -339,6 +379,8 @@ void handle_init(void) {
     .pebble_app_connection_handler = bluetooth_disconnect
   });
   
+  init_battery_level(window_layer, step_color);
+  
   update_time();
   bluetooth_disconnect(connection_service_peek_pebble_app_connection());
   
@@ -352,7 +394,7 @@ void handle_init(void) {
   }
     
   app_message_register_inbox_received(inbox_received_callback);
-  const int inbox_size = 128;
+  const int inbox_size = 192;
   const int outbox_size = 128;
   app_message_open(inbox_size, outbox_size);
 }
@@ -362,6 +404,7 @@ void handle_deinit(void) {
   text_layer_destroy(date_layer);
   text_layer_destroy(steps_layer);
   text_layer_destroy(weather_layer);
+  text_layer_destroy(battery_layer);
   layer_destroy(s_circle_layer);
   window_destroy(my_window);
 }

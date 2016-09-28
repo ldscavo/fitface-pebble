@@ -29,7 +29,8 @@
             "COLOR_TEXT_PRIMARY",
             "COLOR_TEXT_SECONDARY",
             "COLOR_CIRCLE_SECONDARY",
-            "COLOR_AVG_LINE"
+            "COLOR_AVG_LINE",
+            "BATTERY_LEVEL"
         ],
         "projectType": "native",
         "resources": {
